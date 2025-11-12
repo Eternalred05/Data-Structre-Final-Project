@@ -12,7 +12,6 @@ import java.io.RandomAccessFile;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.Queue;
 
 public class Game {
@@ -22,7 +21,6 @@ public class Game {
     private Hero hero;
     private ArrayList<NPC> characters;
     private Queue<Task> tasks;
-    private Deque<Task> completedTasks;
     private ArrayList<Item> items;
     private GeneralTree<Classes> classes;
     private LocalDateTime playedTime;
@@ -68,14 +66,6 @@ public class Game {
         tasks.offer(t);
     }
 
-    public Deque<Task> getCompletedTasks() {
-        return completedTasks;
-    }
-
-    public void addCompletedTasks(Task t) {
-        completedTasks.push(t);
-    }
-
     public ArrayList<Item> getItems() {
         return items;
     }
@@ -105,7 +95,6 @@ public class Game {
         this.archives = new File("C:\\Ale\\Codigos\\Filetest", "file.sav");
         this.characters = new ArrayList<>();
         this.tasks = new ArrayDeque<>();
-        this.completedTasks = new ArrayDeque<>();
         this.items = new ArrayList<>();
         this.classes = new GeneralTree<>();
     }
