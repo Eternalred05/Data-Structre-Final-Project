@@ -183,6 +183,43 @@ public class MainScreen extends GameApplication {
         tt.play();
     }
 
+    private String showNewGameDialog() {
+        String resultName = null;
+        boolean finished = false;
+
+        javafx.scene.control.TextInputDialog dlg = new javafx.scene.control.TextInputDialog();
+        dlg.setTitle("Nueva Partida");
+        dlg.setHeaderText("Introduce el nombre del jugador");
+        dlg.setContentText("Nombre:");
+
+        while (!finished) {
+            java.util.Optional<String> opt = dlg.showAndWait();
+
+            if (!opt.isPresent()) {
+
+                finished = true;
+            } else {
+                String name = opt.get().trim();
+
+                if (!name.isEmpty()) {
+
+                    resultName = name;
+                    finished = true;
+                } else {
+
+                    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+                    alert.setTitle("Nombre inválido");
+                    alert.setHeaderText("El nombre no puede estar vacío");
+                    alert.setContentText("Introduce un nombre válido.");
+                    alert.showAndWait();
+                    dlg.getEditor().setText("");
+                }
+            }
+        }
+
+        return resultName;
+    }
+
     private void activateSelected() {
         String sel = labels[selectedIndex];
         Node target = menuBox.getChildren().get(selectedIndex);
@@ -206,18 +243,45 @@ public class MainScreen extends GameApplication {
 
         switch (sel) {
             case "Continuar":
+                boolean correct = game.readSaveGame();
                 a = new Alert(Alert.AlertType.INFORMATION);
-                a.setTitle("Holis");
-                a.setHeaderText("Se supone que deba haber algo");
-                a.setContentText("Ahyadalegracias");
-                a.showAndWait();
-
+                if (correct) {
+                    a.setHeaderText("Partida Iniciada");
+                    a.setTitle("Iniciada la partida correctamente");
+                    a.setContentText("La partida se ha cargado correctamente: " + game.getHero().getName());
+                    a.showAndWait();
+                } else {
+                    a.setAlertType(Alert.AlertType.ERROR);
+                    a.setTitle("No se pudo iniciar la partida");
+                    a.setHeaderText("Incorrecto");
+                    a.setContentText("Error ");
+                    a.showAndWait();
+                }
                 break;
             case "Nueva Partida":
                 initGame();
-                game.createSaveGame();
+                String name = showNewGameDialog();
+                if (name != null) {
+                    game.createHero(name);
+                    boolean cor = game.createSaveGame();
+                    a = new Alert(Alert.AlertType.INFORMATION);
+                    if (cor) {
+                        a.setHeaderText("Partida Creada");
+                        a.setTitle("Creada la partida correctamente");
+                        a.setContentText("Creada la partida con nombre: " + name);
+                        a.showAndWait();
+
+                    } else {
+                        a.setAlertType(Alert.AlertType.ERROR);
+                        a.setTitle("No se pudo crear la partida");
+                        a.setHeaderText("Incorrecto");
+                        a.setContentText("Error ");
+                        a.showAndWait();
+                    }
+                }
 
                 break;
+
             case "Configuración":
                 a = new Alert(Alert.AlertType.INFORMATION);
                 a.setTitle("Holis");
@@ -240,4 +304,3 @@ public class MainScreen extends GameApplication {
         launch(args);
     }
 }
-
