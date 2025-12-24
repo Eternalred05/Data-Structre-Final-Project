@@ -34,9 +34,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-
 public class ForestHouse {
-    private final StackPane root; 
+
+    private final StackPane root;
     private final Pane world;
     private final StackPane loadingOverlay;
     private ImageView backgroundView;
@@ -73,14 +73,14 @@ public class ForestHouse {
     }
     private Direction currentDirection = Direction.NONE;
 
-  
-      // Tipos de obstáculos para la aldea
+    // Tipos de obstáculos para la aldea
     private enum ObstacleType {
-        HOUSE, TREE, WELL, FENCE, BUSH, EXIT, BLOCK
+        HOUSE, TREE, FENCE, BUSH,BLOCK,PLANT,DECORATION
     }
-    
+
     // Clase interna para obstáculos
     private static class Obstacle {
+
         final Rectangle2D collisionRect;
         final ForestHouse.ObstacleType type;
         final String id;
@@ -90,9 +90,9 @@ public class ForestHouse {
             this.type = type;
             this.id = id;
         }
-    } 
-    
-     public ForestHouse(Game game) {
+    }
+
+    public ForestHouse(Game game) {
         this.game = game;
         root = new StackPane();
         root.setPrefSize(VIEW_W, VIEW_H);
@@ -110,11 +110,13 @@ public class ForestHouse {
         createMover();
 
         root.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
-            if (!isFocused) clearInputState();
+            if (!isFocused) {
+                clearInputState();
+            }
         });
     }
-   
-     public StackPane getRoot() {
+
+    public StackPane getRoot() {
         return root;
     }
 
@@ -132,20 +134,20 @@ public class ForestHouse {
             boolean imageOk = loadBackgroundImage("/Resources/textures/forestHouse/forestHouseOutside.png");
             boolean musicOk = startVillageMusic("/Resources/music/forestHouse.mp3");
 
-           
-
+            populateForestHouseObstacles(); 
+            
             // Luego posicionar al héroe
             positionHeroAtEntrance();
             createStartRectAtHeroStart();
-
-           
 
             PauseTransition wait = new PauseTransition(Duration.millis(600));
             wait.setOnFinished(e -> {
                 showLoading(false);
                 fadeInContent();
                 startMover();
-                if (onLoaded != null) onLoaded.run();
+                if (onLoaded != null) {
+                    onLoaded.run();
+                }
             });
             wait.play();
         });
@@ -155,7 +157,10 @@ public class ForestHouse {
         Platform.runLater(() -> {
             stopVillageMusic();
             stopMover();
-            try { FXGL.getGameScene().removeUINode(root); } catch (Throwable ignored) {}
+            try {
+                FXGL.getGameScene().removeUINode(root);
+            } catch (Throwable ignored) {
+            }
         });
     }
 
@@ -168,11 +173,15 @@ public class ForestHouse {
     }
 
     public void startMover() {
-        if (mover != null) mover.start();
+        if (mover != null) {
+            mover.start();
+        }
     }
 
     public void stopMover() {
-        if (mover != null) mover.stop();
+        if (mover != null) {
+            mover.stop();
+        }
     }
 
     public void stopVillageMusic() {
@@ -182,11 +191,11 @@ public class ForestHouse {
                 music.dispose();
                 music = null;
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
     }
-   
-     // ---------------- internals / UI ----------------
 
+    // ---------------- internals / UI ----------------
     private StackPane createLoadingOverlay() {
         StackPane overlay = new StackPane();
         overlay.setPickOnBounds(true);
@@ -205,8 +214,11 @@ public class ForestHouse {
 
     private void showLoading(boolean show) {
         loadingOverlay.setVisible(show);
-        if (show) loadingOverlay.toFront();
-        else loadingOverlay.toBack();
+        if (show) {
+            loadingOverlay.toFront();
+        } else {
+            loadingOverlay.toBack();
+        }
     }
 
     private void fadeInContent() {
@@ -250,7 +262,9 @@ public class ForestHouse {
     private boolean startVillageMusic(String path) {
         try {
             URL res = getClass().getResource(path);
-            if (res == null) return false;
+            if (res == null) {
+                return false;
+            }
             Media media = new Media(res.toExternalForm());
             stopVillageMusic();
             music = new MediaPlayer(media);
@@ -265,8 +279,11 @@ public class ForestHouse {
 
     private ImageView createHeroView() {
         Image img = null;
-        try { img = new Image(getClass().getResourceAsStream("/Resources/sprites/hero.png")); }
-        catch (Throwable ignored) { img = null; }
+        try {
+            img = new Image(getClass().getResourceAsStream("/Resources/sprites/hero.png"));
+        } catch (Throwable ignored) {
+            img = null;
+        }
         ImageView iv = new ImageView(img);
         iv.setPreserveRatio(true);
         iv.setFitWidth(HERO_W);
@@ -275,9 +292,129 @@ public class ForestHouse {
         return iv;
     }
 
+    // ---------------- colisiones  ----------------
+    private void populateForestHouseObstacles() {
+        obstacles.clear();
+    //-----------------BordesYCentro-----
+        double heroTopLeftX = 37;
+        double heroTopLeftY = 57;
+        obstacles.add(new Obstacle(
+                new Rectangle2D(heroTopLeftX, heroTopLeftY, 48, 48),
+                ObstacleType.BLOCK,
+                "Bloque1"
+        ));
 
+         obstacles.add(new Obstacle(
+                new Rectangle2D(205.0,92.46,402,305),
+                ObstacleType.HOUSE,
+                "Mansion"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(560.64,535.70,450,150),
+                ObstacleType.TREE,
+                "IleraArbolesDerechaH"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(785.24,64.61,40,450),
+                ObstacleType.TREE,
+                "IleraArbolesDerechaV"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(40.64,535.70,245,150),
+                ObstacleType.TREE,
+                "IleraArbolesIzquierdaH"
+        ));
+        
+         obstacles.add(new Obstacle(
+                new Rectangle2D(0,64.61,40,450),
+                ObstacleType.TREE,
+                "IleraArbolesIzquierdaV"
+        ));
+         
+          obstacles.add(new Obstacle(
+                new Rectangle2D(0,0,800,70),
+                ObstacleType.TREE,
+                "IleraArbolesFinal"
+        ));
+       
+     //-----------------Adornos-----
+        obstacles.add(new Obstacle(
+                new Rectangle2D(502.0,590.0,35,10),
+                ObstacleType.PLANT,
+                "Planta1Derecha"
+        ));
+        
+         obstacles.add(new Obstacle(
+                new Rectangle2D(268.0,590.0,48,48),
+                ObstacleType.PLANT,
+                "Planta1Izquierda"
+        ));
+         
+          obstacles.add(new Obstacle(
+                new Rectangle2D(502.0,541.0,48,48),
+                ObstacleType.PLANT,
+                "Planta2Derecha"
+        ));
+          
+         obstacles.add(new Obstacle(
+                new Rectangle2D(268.0,541.0,48,48),
+                ObstacleType.PLANT,
+                "Planta2Izquierda"
+        ));
+         
+         obstacles.add(new Obstacle( //mejorar
+                new Rectangle2D(508.27, 438.0,5,5),
+                ObstacleType.DECORATION,
+                "AdornoDerecha"
+        ));
+         
+          obstacles.add(new Obstacle( //mejorar
+                new Rectangle2D(303.0, 438.0,5,5),
+                ObstacleType.DECORATION,
+                "AdornoIzquierda"
+        ));
+                    
+           obstacles.add(new Obstacle(
+                new Rectangle2D(608.64,75.61,170,30),
+                ObstacleType.DECORATION,
+                "IleraAdornosFondo"
+        ));
+           
+            obstacles.add(new Obstacle(
+                new Rectangle2D(608.7, 350.,45,8),
+                ObstacleType.DECORATION,
+                "CuboAgua"
+        ));
+            
+            obstacles.add(new Obstacle(
+                new Rectangle2D(167.5, 390.,45,10),
+                ObstacleType.DECORATION,
+                "Jarron"
+        ));
+           
+            obstacles.add(new Obstacle(
+                new Rectangle2D(42.18, 118.12,90,50),
+                ObstacleType.TREE,
+                "ArbolFondo"
+        ));
+            
+         obstacles.add(new Obstacle(
+                new Rectangle2D(41.19,170.50,40,50),
+                ObstacleType.DECORATION,
+                "Tronco1"
+        ));       
+        
+         obstacles.add(new Obstacle(
+                new Rectangle2D(133.81, 69.76,40,100),
+                ObstacleType.DECORATION,
+                "Chimenea"
+        ));      
+    }
+    
     // ---------------- movimiento y entradas ----------------
-
     private void positionHeroAtEntrance() {
         double startX = (worldW - HERO_W) / 2.0;
         double startY = worldH - HERO_H - 8.0;
@@ -325,18 +462,24 @@ public class ForestHouse {
         root.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
             KeyCode k = ev.getCode();
 
-            if (k == KeyCode.W || k == KeyCode.UP) keys.add(KeyCode.W);
-            if (k == KeyCode.S || k == KeyCode.DOWN) keys.add(KeyCode.S);
-            if (k == KeyCode.A || k == KeyCode.LEFT) keys.add(KeyCode.A);
-            if (k == KeyCode.D || k == KeyCode.RIGHT) keys.add(KeyCode.D);
+            if (k == KeyCode.W || k == KeyCode.UP) {
+                keys.add(KeyCode.W);
+            }
+            if (k == KeyCode.S || k == KeyCode.DOWN) {
+                keys.add(KeyCode.S);
+            }
+            if (k == KeyCode.A || k == KeyCode.LEFT) {
+                keys.add(KeyCode.A);
+            }
+            if (k == KeyCode.D || k == KeyCode.RIGHT) {
+                keys.add(KeyCode.D);
+            }
 
             if (k == KeyCode.P) {
                 System.out.println("Hero position (aldea): (" + heroView.getLayoutX() + ", " + heroView.getLayoutY() + ")");
-                System.out.println("Hero world center (aldea): (" + (heroView.getLayoutX() + HERO_W/2) + ", " + (heroView.getLayoutY() + HERO_H/2) + ")");
+                System.out.println("Hero world center (aldea): (" + (heroView.getLayoutX() + HERO_W / 2) + ", " + (heroView.getLayoutY() + HERO_H / 2) + ")");
                 System.out.println("Hero direction: " + getHeroDirection().name());
             }
-
-            
 
             if (k == KeyCode.I || k == KeyCode.ADD || k == KeyCode.PLUS) {
                 clearInputState();
@@ -349,12 +492,16 @@ public class ForestHouse {
                     try {
                         if (game != null && game.getHero() != null) {
                             Hero h = game.getHero();
-                            h.setLastLocation(Hero.Location.FIELD_VILLAGE);
+                            h.setLastLocation(Hero.Location.FOREST_HOUSE);
                             h.setLastPosX(heroView.getLayoutX());
                             h.setLastPosY(heroView.getLayoutY());
-                            try { game.createSaveGame(); } catch (Throwable ignored) {}
+                            try {
+                                game.createSaveGame();
+                            } catch (Throwable ignored) {
+                            }
                         }
-                    } catch (Throwable ignored) {}
+                    } catch (Throwable ignored) {
+                    }
                     if (onExitCallback != null) {
                         hide();
                         onExitCallback.run();
@@ -375,7 +522,8 @@ public class ForestHouse {
                     if (root.getScene() != null && root.getScene().getWindow() != null) {
                         dlg.initOwner(root.getScene().getWindow());
                     }
-                } catch (Throwable ignored) {}
+                } catch (Throwable ignored) {
+                }
                 dlg.setOnHidden(eh -> {
                     clearInputState();
                     Platform.runLater(root::requestFocus);
@@ -387,15 +535,22 @@ public class ForestHouse {
                     try {
                         if (game != null && game.getHero() != null) {
                             Hero h = game.getHero();
-                            h.setLastLocation(Hero.Location.FIELD_VILLAGE);
+                            h.setLastLocation(Hero.Location.FOREST_HOUSE);
                             h.setLastPosY(heroView.getLayoutY());
                             h.setLastPosX(heroView.getLayoutX());
-                            try { game.createSaveGame(); } catch (Throwable ignored) {}
+                            try {
+                                game.createSaveGame();
+                            } catch (Throwable ignored) {
+                            }
                         }
-                    } catch (Throwable ignored) {}
+                    } catch (Throwable ignored) {
+                    }
 
                     stopVillageMusic();
-                    try { FXGL.getGameScene().removeUINode(root); } catch (Throwable ignored) {}
+                    try {
+                        FXGL.getGameScene().removeUINode(root);
+                    } catch (Throwable ignored) {
+                    }
                     MainScreen.restoreMenuAndMusic();
                 } else {
                     clearInputState();
@@ -408,17 +563,28 @@ public class ForestHouse {
 
         root.addEventFilter(KeyEvent.KEY_RELEASED, ev -> {
             KeyCode k = ev.getCode();
-            if (k == KeyCode.W || k == KeyCode.UP) keys.remove(KeyCode.W);
-            if (k == KeyCode.S || k == KeyCode.DOWN) keys.remove(KeyCode.S);
-            if (k == KeyCode.A || k == KeyCode.LEFT) keys.remove(KeyCode.A);
-            if (k == KeyCode.D || k == KeyCode.RIGHT) keys.remove(KeyCode.D);
+            if (k == KeyCode.W || k == KeyCode.UP) {
+                keys.remove(KeyCode.W);
+            }
+            if (k == KeyCode.S || k == KeyCode.DOWN) {
+                keys.remove(KeyCode.S);
+            }
+            if (k == KeyCode.A || k == KeyCode.LEFT) {
+                keys.remove(KeyCode.A);
+            }
+            if (k == KeyCode.D || k == KeyCode.RIGHT) {
+                keys.remove(KeyCode.D);
+            }
             ev.consume();
         });
 
         root.setFocusTraversable(true);
         root.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene != null) Platform.runLater(root::requestFocus);
-            else clearInputState();
+            if (newScene != null) {
+                Platform.runLater(root::requestFocus);
+            } else {
+                clearInputState();
+            }
         });
     }
 
@@ -426,32 +592,51 @@ public class ForestHouse {
         stopMover();
 
         // Pausar música localmente
-        try { if (music != null) music.pause(); } catch (Throwable ignored) {}
+        try {
+            if (music != null) {
+                music.pause();
+            }
+        } catch (Throwable ignored) {
+        }
 
         // Pasar referencia para que InventoryScreen pueda guardar la posición y reanudar foco
         inventory = new InventoryScreen(game, this);
 
         inventory.setOnClose(() -> {
             Platform.runLater(() -> {
-                try { FXGL.getGameScene().removeUINode(inventory.getRoot()); } catch (Throwable ignored) {}
+                try {
+                    FXGL.getGameScene().removeUINode(inventory.getRoot());
+                } catch (Throwable ignored) {
+                }
                 startMover();
-                try { if (music != null) music.play(); } catch (Throwable ignored) {}
+                try {
+                    if (music != null) {
+                        music.play();
+                    }
+                } catch (Throwable ignored) {
+                }
                 root.requestFocus();
             });
         });
 
         inventory.show();
         Platform.runLater(() -> {
-            try { inventory.getRoot().requestFocus(); } catch (Throwable ignored) {}
+            try {
+                inventory.getRoot().requestFocus();
+            } catch (Throwable ignored) {
+            }
         });
     }
 
     private void createMover() {
         mover = new AnimationTimer() {
             private long last = -1;
+
             @Override
             public void handle(long now) {
-                if (last < 0) last = now;
+                if (last < 0) {
+                    last = now;
+                }
                 double dt = (now - last) / 1e9;
                 last = now;
 
@@ -468,12 +653,22 @@ public class ForestHouse {
     private void updateAndMove(double dt) {
         double vx = 0;
         double vy = 0;
-        if (keys.contains(KeyCode.A)) vx -= HERO_SPEED;
-        if (keys.contains(KeyCode.D)) vx += HERO_SPEED;
-        if (keys.contains(KeyCode.W)) vy -= HERO_SPEED;
-        if (keys.contains(KeyCode.S)) vy += HERO_SPEED;
-
-    
+        if (keys.contains(KeyCode.A)) {
+            vx -= HERO_SPEED;
+        }
+        if (keys.contains(KeyCode.D)) {
+            vx += HERO_SPEED;
+        }
+        if (keys.contains(KeyCode.W)) {
+            vy -= HERO_SPEED;
+        }
+        if (keys.contains(KeyCode.S)) {
+            vy += HERO_SPEED;
+        }
+        
+         ForestHouse.Direction newDir = (vx != 0 || vy != 0) ? 
+          directionFromVector(vx, vy) : ForestHouse.Direction.NONE;
+          setDirectionIfChanged(newDir);
 
         if (vx == 0 && vy == 0) {
             checkStartIntersection();
@@ -511,36 +706,66 @@ public class ForestHouse {
             boolean canMoveY = true;
 
             for (ForestHouse.Obstacle ob : obstacles) {
-                if (heroRectX.intersects(ob.collisionRect)) canMoveX = false;
-                if (heroRectY.intersects(ob.collisionRect)) canMoveY = false;
+                if (heroRectX.intersects(ob.collisionRect)) {
+                    canMoveX = false;
+                }
+                if (heroRectY.intersects(ob.collisionRect)) {
+                    canMoveY = false;
+                }
             }
 
-            if (canMoveX) heroView.setLayoutX(proposedX);
-            if (canMoveY) heroView.setLayoutY(proposedY);
+            if (canMoveX) {
+                heroView.setLayoutX(proposedX);
+            }
+            if (canMoveY) {
+                heroView.setLayoutY(proposedY);
+            }
         }
 
         checkStartIntersection();
         updateCamera();
     }
 
-    private FieldVillage.Direction directionFromVector(double vx, double vy) {
-        if (vx == 0 && vy == 0) return FieldVillage.Direction.NONE;
+    private ForestHouse.Direction directionFromVector(double vx, double vy) {
+        if (vx == 0 && vy == 0) {
+            return ForestHouse.Direction.NONE;
+        }
         double angle = Math.toDegrees(Math.atan2(-vy, vx));
-        if (angle < 0) angle += 360.0;
+        if (angle < 0) {
+            angle += 360.0;
+        }
 
-        if (angle >= 337.5 || angle < 22.5) return FieldVillage.Direction.E;
-        if (angle < 67.5) return FieldVillage.Direction.NE;
-        if (angle < 112.5) return FieldVillage.Direction.N;
-        if (angle < 157.5) return FieldVillage.Direction.NW;
-        if (angle < 202.5) return FieldVillage.Direction.W;
-        if (angle < 247.5) return FieldVillage.Direction.SW;
-        if (angle < 292.5) return FieldVillage.Direction.S;
-        if (angle < 337.5) return FieldVillage.Direction.SE;
-        return FieldVillage.Direction.NONE;
+        if (angle >= 337.5 || angle < 22.5) {
+            return ForestHouse.Direction.E;
+        }
+        if (angle < 67.5) {
+            return ForestHouse.Direction.NE;
+        }
+        if (angle < 112.5) {
+            return ForestHouse.Direction.N;
+        }
+        if (angle < 157.5) {
+            return ForestHouse.Direction.NW;
+        }
+        if (angle < 202.5) {
+            return ForestHouse.Direction.W;
+        }
+        if (angle < 247.5) {
+            return ForestHouse.Direction.SW;
+        }
+        if (angle < 292.5) {
+            return ForestHouse.Direction.S;
+        }
+        if (angle < 337.5) {
+            return ForestHouse.Direction.SE;
+        }
+        return ForestHouse.Direction.NONE;
     }
 
     private void setDirectionIfChanged(ForestHouse.Direction newDir) {
-        if (newDir == null) newDir = ForestHouse.Direction.NONE;
+        if (newDir == null) {
+            newDir = ForestHouse.Direction.NONE;
+        }
         currentDirection = newDir;
     }
 
@@ -585,8 +810,12 @@ public class ForestHouse {
     }
 
     private static double clamp(double v, double lo, double hi) {
-        if (v < lo) return lo;
-        if (v > hi) return hi;
+        if (v < lo) {
+            return lo;
+        }
+        if (v > hi) {
+            return hi;
+        }
         return v;
     }
 
