@@ -131,7 +131,7 @@ public class ForestHouse {
             FXGL.getGameScene().addUINode(root);
             showLoading(true);
 
-            boolean imageOk = loadBackgroundImage("/Resources/textures/forestHouse/forestHouseOutside.png");
+            boolean imageOk = loadBackgroundImage("/Resources/textures/forestHouse/forestHouseOutside2.png");
             boolean musicOk = startVillageMusic("/Resources/music/forestHouse.mp3");
 
             populateForestHouseObstacles(); 
@@ -824,5 +824,6 @@ public class ForestHouse {
     }
 
 }
+
 
 
