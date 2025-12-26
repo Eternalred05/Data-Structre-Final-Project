@@ -465,7 +465,7 @@ public class CombatScreen {
         }
 
         if (endCombatNow) {
-            boolean leveled = game.getHero().levelUp();
+            boolean leveled = game.levelUp();
             if (leveled) {
                 String alert = "You have leveled up! Now You Are level" + String.valueOf(game.getHero().getLevel());
                 toastQueue.enqueue(alert);

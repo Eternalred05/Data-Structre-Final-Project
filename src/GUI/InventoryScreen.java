@@ -3,7 +3,10 @@ package GUI;
 import Logic.Game;
 import Characters.Hero;
 import Items.*;
+import Misc.Classes;
 import Runner.MainScreen;
+import Tree.BinaryTreeNode;
+import Tree.InBreadthIterator;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -272,20 +275,37 @@ public class InventoryScreen {
         grid.getChildren().addAll(armorTitle, armorValue);
         rightRow++;
 
-        Label skillTreeTitle = new Label("SKILL TREE");
-        skillTreeTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #aaddff;");
-        GridPane.setConstraints(skillTreeTitle, 0, 6, 2, 1);
-        grid.getChildren().add(skillTreeTitle);
+                Label levelProgressTitle = new Label("LEVEL PROGRESSION");
+        levelProgressTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #aaddff;");
+        GridPane.setConstraints(levelProgressTitle, 0, 6, 2, 1);
+        grid.getChildren().add(levelProgressTitle);
 
-        TextArea skillTreeArea = new TextArea();
-        skillTreeArea.setEditable(false);
-        skillTreeArea.setPrefRowCount(6);
-        skillTreeArea.setPrefColumnCount(50);
-        skillTreeArea.setWrapText(true);
-        skillTreeArea.setText(getSkillTreeAsString());
-        skillTreeArea.setStyle("-fx-control-inner-background: #0a0a14; -fx-text-fill: #aaddff; -fx-font-family: 'Consolas', monospace; -fx-font-size: 12px; -fx-border-color: #333344;");
-        GridPane.setConstraints(skillTreeArea, 0, 7, 4, 2);
-        grid.getChildren().add(skillTreeArea);
+        TextArea levelProgressArea = new TextArea();
+        levelProgressArea.setEditable(false);
+        levelProgressArea.setPrefRowCount(6);
+        levelProgressArea.setPrefColumnCount(50);
+        levelProgressArea.setWrapText(true);
+        levelProgressArea.setStyle("-fx-control-inner-background: #0a0a14; -fx-text-fill: #aaddff; "
+                + "-fx-font-family: 'Consolas', monospace; -fx-font-size: 12px; -fx-border-color: #333344;");
+
+       
+        StringBuilder sb = new StringBuilder();
+        sb.append("Current Level: ").append(hero.getLevel()).append("\n");
+        sb.append("Experience: ").append(hero.getExpActual()).append(" / ").append(hero.getExpMax()).append("\n\n");
+        sb.append("Unlocked Classes:\n");
+
+        InBreadthIterator<Classes> it = hero.getUnlockedClasses().inBreadthIterator();
+        while (it.hasNext()) {
+            BinaryTreeNode<Classes> node = it.nextNode();
+            Classes cl = node.getInfo();
+            sb.append("- ").append(cl.getId()).append(" : ").append(cl.getDescription()).append("\n");
+        }
+
+        levelProgressArea.setText(sb.toString());
+
+        GridPane.setConstraints(levelProgressArea, 0, 7, 4, 2);
+        grid.getChildren().add(levelProgressArea);
+
 
         scrollPane.setContent(grid);
         tab.setContent(scrollPane);
