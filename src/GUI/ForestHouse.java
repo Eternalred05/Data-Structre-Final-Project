@@ -55,7 +55,15 @@ public class ForestHouse {
 
     private Rectangle startRect;
     private boolean onStartRect = false;
-
+    private Rectangle houseEntranceRect;
+    private boolean onHouseEntranceRect = false;
+    private Rectangle houseExitRect;
+    private boolean onHouseExit = false;
+    private Rectangle floor2EntranceRect;
+    private boolean onFloor2Entrance = false;
+    private Rectangle floor2ExitRect;
+    private boolean onFloor2Exit = false;
+    
     private Runnable onExitCallback;
     private final Game game;
 
@@ -138,7 +146,8 @@ public class ForestHouse {
             // Luego posicionar al héroe
             positionHeroAtEntrance();
             createStartRectAtHeroStart();
-
+            createHouseEntranceRect();  
+            
             PauseTransition wait = new PauseTransition(Duration.millis(600));
             wait.setOnFinished(e -> {
                 showLoading(false);
@@ -291,7 +300,7 @@ public class ForestHouse {
         return iv;
     }
 
-    // ---------------- colisiones  ----------------
+    // ---------------- metodos de colisiones  ----------------
     private void populateForestHouseObstacles() {
         obstacles.clear();
         //-----------------BordesYCentro-----
@@ -413,7 +422,199 @@ public class ForestHouse {
         ));
     }
 
-    // ---------------- movimiento y entradas ----------------
+    private  void colisicions2Floor(){
+          double heroTopLeftX = 0;
+        double heroTopLeftY =0 ;
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(heroTopLeftX, heroTopLeftY, 5, 5),
+                ObstacleType.DECORATION,
+                "Bloque1"
+        ));
+        
+         obstacles.add(new Obstacle(
+                new Rectangle2D(0, 0, 800,71),
+                ObstacleType.DECORATION,
+                "CortinasFondo"
+        ));
+         
+          obstacles.add(new Obstacle(
+                new Rectangle2D(61.01,77,68,77),
+                ObstacleType.DECORATION,
+                "Cama"
+        ));
+          
+           obstacles.add(new Obstacle(
+                new Rectangle2D(0,70,230,39),
+                ObstacleType.DECORATION,
+                "ComodasIzquirdaSupe"
+        ));
+           
+            obstacles.add(new Obstacle(
+                new Rectangle2D(0,295,83,15),
+                ObstacleType.DECORATION,
+                "Mesaizq"
+        ));
+            
+          obstacles.add(new Obstacle(
+                new Rectangle2D(253,582.0,72,15),
+                ObstacleType.DECORATION,
+                "MesaInferior"
+        )); 
+           
+          obstacles.add(new Obstacle(
+                new Rectangle2D(490.297, 90.72,73,20),
+                ObstacleType.DECORATION,
+                "Mesasuperior"
+        ));
+            
+          obstacles.add(new Obstacle(
+                new Rectangle2D(640,90.72,150,20),
+                ObstacleType.DECORATION,
+                "EstantesDercha"
+        ));
+            
+          obstacles.add(new Obstacle(
+                new Rectangle2D(740,395.0,15,55),
+                ObstacleType.DECORATION,
+                "Silla"
+        ));
+            
+           obstacles.add(new Obstacle(
+                new Rectangle2D(588,391.0,117,109),
+                ObstacleType.DECORATION,
+                "MesaMapas"
+        ));
+           
+     }
+    
+    private void colissionInSide(){
+        double heroTopLeftX = 0;
+        double heroTopLeftY =580 ;
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(heroTopLeftX, heroTopLeftY, 5, 5),
+                ObstacleType.DECORATION,
+                "Bloque1"
+        ));
+        
+       obstacles.add(new Obstacle(
+                new Rectangle2D(0, 580, 285,10),
+                ObstacleType.BLOCK,
+                "DifenPisoIzquierda"
+        ));
+       
+       obstacles.add(new Obstacle(
+                new Rectangle2D(582, 580, 285,10),
+                ObstacleType.DECORATION,
+                "DifenPisoIDerecha"
+        ));
+       
+       obstacles.add(new Obstacle(
+                new Rectangle2D(0,488.06,35,100),
+                ObstacleType.DECORATION,
+                "EsferaYMesaIzquierda"
+        ));
+ 
+       obstacles.add(new Obstacle(
+                new Rectangle2D(0,340,35,70),
+                ObstacleType.BLOCK,
+                "CuboYJarronIzquierda"
+        ));
+       
+       obstacles.add(new Obstacle(
+                new Rectangle2D(110,535,70,30),
+                ObstacleType.DECORATION,
+                "MesaIzqInferior"
+        ));
+       
+       
+       obstacles.add(new Obstacle(
+                new Rectangle2D(680.21,537,70,20),
+                ObstacleType.DECORATION,
+                "MesasDerechInferior"
+        ));
+      
+       obstacles.add(new Obstacle(
+                new Rectangle2D(785,480,20,70),
+                ObstacleType.DECORATION,
+                "SacosDerecha"
+        ));
+        //aquiii
+       obstacles.add(new Obstacle(
+                new Rectangle2D(785,400,70,30),
+                ObstacleType.DECORATION,
+                "BarrilesDerecha"
+        ));
+       
+       obstacles.add(new Obstacle(
+                new Rectangle2D(735,350,70,20),
+                ObstacleType.DECORATION,
+                "JarronesDerecha"
+        ));
+       
+       obstacles.add(new Obstacle(
+                new Rectangle2D(785,150,30,65),
+                ObstacleType.DECORATION,
+                "SillaDerecha"
+        ));
+       
+        obstacles.add(new Obstacle(
+                new Rectangle2D(680,200,74,30),
+                ObstacleType.DECORATION,
+                "MesaComida"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(155,0,70,70),
+                ObstacleType.DECORATION,
+                "EstanteLadoEscalera"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(212,0,700,20),
+                ObstacleType.DECORATION,
+                "Meceta y adornos Fondo"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(585,0,30,70),
+                ObstacleType.DECORATION,
+                "EstantePlatos"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(655,0,80,70),
+                ObstacleType.DECORATION,
+                "Piano"
+        ));
+        
+         obstacles.add(new Obstacle(
+                new Rectangle2D(310.5,300,8,8),
+                ObstacleType.DECORATION,
+                "CajaCentro"
+        ));
+         
+          obstacles.add(new Obstacle(
+                new Rectangle2D(350,250,27,50),
+                ObstacleType.DECORATION,
+                "Silla1"
+        ));
+          
+           obstacles.add(new Obstacle(
+                new Rectangle2D(490,250,27,50),
+                ObstacleType.DECORATION,
+                "Silla2"
+        ));
+           
+            obstacles.add(new Obstacle(
+                new Rectangle2D(390,295,85,75),
+                ObstacleType.DECORATION,
+                "MesaCentro"
+        ));
+    }
+    
+    // ---------------- movimiento , y entradas ----------------
     private void positionHeroAtEntrance() {
         double startX = (worldW - HERO_W) / 2.0;
         double startY = worldH - HERO_H - 8.0;
@@ -439,8 +640,8 @@ public class ForestHouse {
             world.getChildren().remove(startRect);
             startRect = null;
         }
-        double rx = heroView.getLayoutX();
-        double ry = heroView.getLayoutY();
+        double rx = 379.26;
+        double ry = 576.0;
         double rw = HERO_W + 8;
         double rh = HERO_H + 8;
 
@@ -457,6 +658,102 @@ public class ForestHouse {
         heroView.toFront();
     }
 
+    private void createHouseEntranceRect() { 
+    if (houseEntranceRect != null) {
+        world.getChildren().remove(houseEntranceRect);
+        houseEntranceRect = null;
+    }
+    
+     double rx = 352;
+        double ry = 397.98;
+        double rw = 50;
+        double rh = 20;
+    
+    houseEntranceRect = new Rectangle(rx - 4, ry - 4, rw, rh);
+    houseEntranceRect.setFill(Color.rgb(0, 120, 255, 0.28));
+    houseEntranceRect.setStroke(Color.rgb(0, 80, 200, 0.9));
+    houseEntranceRect.setMouseTransparent(true);
+    houseEntranceRect.getProperties().put("tag", "house_entrance");
+
+    if (!world.getChildren().contains(houseEntranceRect)) {
+        world.getChildren().add(houseEntranceRect);
+    }
+    houseEntranceRect.toBack();
+    heroView.toFront();
+}
+    
+    private void createHouseExitRect() { 
+    if (houseExitRect != null) {
+        world.getChildren().remove(houseExitRect);
+        houseEntranceRect = null;
+    }
+    
+     double rx = 380;
+        double ry = 580;
+        double rw = 50;
+        double rh = 50;
+    
+    houseExitRect = new Rectangle(rx - 4, ry - 4, rw, rh);
+    houseExitRect.setFill(Color.rgb(0, 120, 255, 0.28));
+   houseExitRect.setStroke(Color.rgb(0, 80, 200, 0.9));
+    houseExitRect.setMouseTransparent(true);
+    houseExitRect.getProperties().put("tag", "house_exit");
+
+    if (!world.getChildren().contains(houseExitRect)) {
+        world.getChildren().add(houseExitRect);
+    }
+   houseExitRect.toBack();
+    heroView.toFront();
+}
+    
+     private void createFloor2EntranceRect(){
+        if (floor2EntranceRect!= null) {
+        world.getChildren().remove(floor2EntranceRect);
+        floor2EntranceRect = null;
+    }
+    
+     double rx = 0;
+        double ry = 0;
+        double rw = 100;
+        double rh = 50;
+    
+   floor2EntranceRect = new Rectangle(rx - 4, ry - 4, rw, rh);
+   floor2EntranceRect.setFill(Color.rgb(0, 120, 255, 0.28));
+   floor2EntranceRect.setStroke(Color.rgb(0, 80, 200, 0.9));
+   floor2EntranceRect.setMouseTransparent(true);
+   floor2EntranceRect.getProperties().put("tag", "floor_entrance");
+
+    if (!world.getChildren().contains(floor2EntranceRect)) {
+        world.getChildren().add(floor2EntranceRect);
+    }
+  floor2EntranceRect.toBack();
+    heroView.toFront();
+    }
+
+     private void createFloor2ExitRect(){
+         if (floor2ExitRect!= null) {
+        world.getChildren().remove(floor2ExitRect);
+        floor2ExitRect = null;
+    }
+    
+     double rx = 0;
+        double ry = 560;
+        double rw = 30;
+        double rh = 30;
+    
+   floor2ExitRect = new Rectangle(rx - 4, ry - 4, rw, rh);
+   floor2ExitRect.setFill(Color.rgb(0, 120, 255, 0.28));
+   floor2ExitRect.setStroke(Color.rgb(0, 80, 200, 0.9));
+   floor2ExitRect.setMouseTransparent(true);
+   floor2ExitRect.getProperties().put("tag", "floor_entrance");
+
+    if (!world.getChildren().contains(floor2EntranceRect)) {
+        world.getChildren().add(floor2EntranceRect);
+    }
+  floor2EntranceRect.toBack();
+    heroView.toFront();
+     }
+    
     private void installInputHandlers() {
         root.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
             KeyCode k = ev.getCode();
@@ -508,6 +805,22 @@ public class ForestHouse {
                         hide();
                     }
                 }
+                
+                if(onHouseEntranceRect){
+                   intoHouse();
+                } 
+                if(onFloor2Entrance){
+                   floor2Into();
+                    
+                }
+               
+                if(onHouseExit){
+                    exitHouse();
+                } 
+                    
+                if(onFloor2Exit){
+                    intoHouse();
+                }
             }
 
             if (k == KeyCode.ESCAPE) {
@@ -556,6 +869,7 @@ public class ForestHouse {
                     Platform.runLater(root::requestFocus);
                 }
             }
+            
 
             ev.consume();
         });
@@ -671,6 +985,10 @@ public class ForestHouse {
 
         if (vx == 0 && vy == 0) {
             checkStartIntersection();
+            checkHouseEntranceIntersection();
+            checkHouseExitIntersection();
+            checkfloor2EntranceIntersection();
+            checkfloor2EnxitIntersection();
             return;
         }
 
@@ -782,6 +1100,50 @@ public class ForestHouse {
         startRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
     }
 
+    private void checkHouseEntranceIntersection() {
+    if (houseEntranceRect == null) {
+        onHouseEntranceRect = false;
+        return;
+    }
+    boolean intersects = heroView.getBoundsInParent().intersects(houseEntranceRect.getBoundsInParent());
+    onHouseEntranceRect = intersects;
+    houseEntranceRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
+}
+
+     private void checkHouseExitIntersection(){
+       if (houseExitRect == null) {
+        onHouseExit = false;
+        return;
+    }
+    boolean intersects = heroView.getBoundsInParent().intersects(houseExitRect.getBoundsInParent());
+    onHouseExit = intersects;
+    houseExitRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
+ 
+    }
+     
+      private void checkfloor2EntranceIntersection(){
+       if (floor2EntranceRect == null) {
+        onFloor2Entrance = false;
+        return;
+    }
+    boolean intersects = heroView.getBoundsInParent().intersects(floor2EntranceRect.getBoundsInParent());
+    onFloor2Entrance = intersects;
+    floor2EntranceRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
+ 
+    }
+    
+    private void checkfloor2EnxitIntersection(){
+       if (floor2ExitRect == null) {
+        onFloor2Exit = false;
+        return;
+    }
+    boolean intersects = heroView.getBoundsInParent().intersects(floor2ExitRect .getBoundsInParent());
+    onFloor2Exit = intersects;
+   floor2ExitRect .setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
+ 
+    }
+    
+      
     private void updateCamera() {
         double heroCenterX = heroView.getLayoutX() + HERO_W / 2.0;
         double heroCenterY = heroView.getLayoutY() + HERO_H / 2.0;
@@ -821,5 +1183,47 @@ public class ForestHouse {
     private void clearInputState() {
         keys.clear();
     }
-
+   //---Metodo para cambiar el fondo la musica y las colisiones,y todo dentro del 1er piso-----
+    private void intoHouse(){ 
+        obstacles.clear(); //limpiando coaliciones
+        colissionInSide();
+        startRect=null;
+        
+       loadBackgroundImage("/Resources/textures/forestHouse/1stFloorForestHouse.png");// cambiando fondo
+       
+       stopVillageMusic();
+       startVillageMusic("/Resources/music/inteiorOST.mp3");//camniar musica
+       
+      setHeroPosition(411.0, 576.0); //poisiconar heroe
+      
+      createHouseExitRect();
+     createFloor2EntranceRect();
+      
+    
+    }
+    
+     private void exitHouse(){
+         obstacles.clear();;
+                    populateForestHouseObstacles();
+                    createHouseEntranceRect();
+                    
+                    loadBackgroundImage("/Resources/textures/forestHouse/foresthouseOutside2.png");// cambiando fondo
+       
+                    stopVillageMusic();
+                   startVillageMusic("/Resources/music/forestHouse.mp3");//camniar musica
+                   
+                   setHeroPosition(379.0, 410.0); //poisiconar heroe 
+    }
+     
+     private void  floor2Into(){
+        obstacles.clear();
+        colisicions2Floor();
+        createFloor2ExitRect();
+        houseExitRect=null;
+        
+        loadBackgroundImage("/Resources/textures/forestHouse/2ndFloorForestHouse.png");// cambiando fondo
+        setHeroPosition(0, 530.0); //poisiconar heroe   
+     }
+          
 }
+
