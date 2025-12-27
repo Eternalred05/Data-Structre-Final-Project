@@ -64,6 +64,9 @@ public class ForestHouse {
     private Rectangle floor2ExitRect;
     private boolean onFloor2Exit = false;
     
+    private boolean entranceHouse=false;       
+    
+    
     private Runnable onExitCallback;
     private final Game game;
 
@@ -640,12 +643,12 @@ public class ForestHouse {
             world.getChildren().remove(startRect);
             startRect = null;
         }
-        double rx = 379.26;
-        double ry = 576.0;
-        double rw = HERO_W + 8;
-        double rh = HERO_H + 8;
+         double rx = 380;
+        double ry = 580;
+        double rw = 50;
+        double rh = 50;
 
-        startRect = new Rectangle(rx - 4, ry - 4, rw, rh);
+        startRect = new Rectangle(rx , ry , rw, rh);
         startRect.setFill(Color.rgb(0, 120, 255, 0.28));
         startRect.setStroke(Color.rgb(0, 80, 200, 0.9));
         startRect.setMouseTransparent(true);
@@ -807,7 +810,8 @@ public class ForestHouse {
                 }
                 
                 if(onHouseEntranceRect){
-                   intoHouse();
+                    entranceHouse=true;
+                   intoHouse(entranceHouse);
                 } 
                 if(onFloor2Entrance){
                    floor2Into();
@@ -819,7 +823,8 @@ public class ForestHouse {
                 } 
                     
                 if(onFloor2Exit){
-                    intoHouse();
+                    entranceHouse=false;
+                    intoHouse(entranceHouse);
                 }
             }
 
@@ -1184,7 +1189,7 @@ public class ForestHouse {
         keys.clear();
     }
    //---Metodo para cambiar el fondo la musica y las colisiones,y todo dentro del 1er piso-----
-    private void intoHouse(){ 
+    private void intoHouse(boolean entranceHouse){ 
         obstacles.clear(); //limpiando coaliciones
         colissionInSide();
         startRect=null;
@@ -1192,9 +1197,12 @@ public class ForestHouse {
        loadBackgroundImage("/Resources/textures/forestHouse/1stFloorForestHouse.png");// cambiando fondo
        
        stopVillageMusic();
-       startVillageMusic("/Resources/music/inteiorOST.mp3");//camniar musica
-       
+       startVillageMusic("/Resources/music/interiorOST.mp3");//camniar musica
+       if(entranceHouse){
       setHeroPosition(411.0, 576.0); //poisiconar heroe
+       }else{
+      setHeroPosition(40,0 );
+       }
       
       createHouseExitRect();
      createFloor2EntranceRect();
@@ -1205,7 +1213,8 @@ public class ForestHouse {
      private void exitHouse(){
          obstacles.clear();;
                     populateForestHouseObstacles();
-                    createHouseEntranceRect();
+                    houseExitRect=null;
+                   createStartRectAtHeroStart() ;
                     
                     loadBackgroundImage("/Resources/textures/forestHouse/foresthouseOutside2.png");// cambiando fondo
        
