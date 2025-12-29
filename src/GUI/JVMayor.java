@@ -1,9 +1,9 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package GUI;
 
-import GUI.JVInn;
-import GUI.JVMayor;
-import GUI.JVStore;
-import GUI.GameMapScreen;
 import Runner.MainScreen;
 import Characters.Hero;
 import Logic.Game;
@@ -37,8 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class FieldVillage {
-
+public class JVMayor {
     private final StackPane root;
     private final Pane world;
     private final StackPane loadingOverlay;
@@ -69,7 +68,6 @@ public class FieldVillage {
 
     // Inventario (si se abre desde aquí se pasa this)
     private InventoryScreen inventory;
-    private Obstacle currentInteractable = null;
 
     // Direcciones del héroe (para depuración con tecla P)
     public enum Direction {
@@ -78,9 +76,9 @@ public class FieldVillage {
     private Direction currentDirection = Direction.NONE;
 
     // Tipos de obstáculos para la aldea
-   private enum ObstacleType {
-    HOUSE, TREE, WELL, FENCE, BUSH, EXIT, BLOCK, DOOR
-}
+    private enum ObstacleType {
+        HOUSE, TREE, WELL, FENCE, BUSH, EXIT, BLOCK
+    }
 
     // Clase interna para obstáculos
     private static class Obstacle {
@@ -95,7 +93,7 @@ public class FieldVillage {
         }
     }
 
-    public FieldVillage(Game game) {
+    public JVMayor(Game game) {
         this.game = game;
         root = new StackPane();
         root.setPrefSize(VIEW_W, VIEW_H);
@@ -117,8 +115,6 @@ public class FieldVillage {
         });
     }
 
-    // ---------------- public API ----------------
-
     public StackPane getRoot() {
         return root;
     }
@@ -134,8 +130,8 @@ public class FieldVillage {
             FXGL.getGameScene().addUINode(root);
             showLoading(true);
 
-            boolean imageOk = loadBackgroundImage("/Resources/textures/fieldVillage/fieldVillage.png");
-            boolean musicOk = startVillageMusic("/Resources/music/fieldVillage.mp3");
+            boolean imageOk = loadBackgroundImage("/Resources/textures/fieldVillage/FVMayor.png");
+            boolean musicOk = startVillageMusic("/Resources/music/interiorOST.mp3");
 
             // Primero poblar colisiones
             populateVillageObstacles();
@@ -274,7 +270,7 @@ public class FieldVillage {
 
     private ImageView createHeroView() {
         Image img = null;
-        try { img = new Image(getClass().getResourceAsStream("/Resources/sprites/hero.png")); }
+        try { img = new Image(getClass().getResourceAsStream(game.getHero().getSpritePath())); }
         catch (Throwable ignored) { img = null; }
         ImageView iv = new ImageView(img);
         iv.setPreserveRatio(true);
@@ -284,297 +280,41 @@ public class FieldVillage {
         return iv;
     }
 
+    // ---------------- colisiones (restauradas) ----------------
 
     private void populateVillageObstacles() {
         obstacles.clear();
 
-        double heroTopLeftX = 97.71;
-        double heroTopLeftY = 533.44;
+        // Agrega al menos un área de salida (puerta)
         obstacles.add(new Obstacle(
-                new Rectangle2D(heroTopLeftX, heroTopLeftY, 48, 48),
+                new Rectangle2D(350, 570, 100, 50),
+                ObstacleType.EXIT,
+                "puertaSalida"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(0, 0, 820, 110),
                 ObstacleType.BLOCK,
-                "bloque1"
+                "estantes"
         ));
 
         obstacles.add(new Obstacle(
-                new Rectangle2D(238.97, 529.88, 48, 48),
+                new Rectangle2D(300, 105, 215, 130),
                 ObstacleType.BLOCK,
-                "bloque2"
+                "escritorio"
         ));
 
         obstacles.add(new Obstacle(
-                new Rectangle2D(20, 520, 60, 370),
-                ObstacleType.BUSH,
-                "arbustoIzquierdoLargo"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(1414.08, 0, 60, 900),
-                ObstacleType.BUSH,
-                "arbustoDerechoLargo"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(1350, 90, 60, 180),
-                ObstacleType.BUSH,
-                "lineaBarriles"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(1215, 300, 15, 15),
-                ObstacleType.BUSH,
-                "barrilSolitario"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(1170, 780, 160, 55),
-                ObstacleType.BUSH,
-                "puesto"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(1265, 0, 160, 55),
-                ObstacleType.BUSH,
-                "arbustoSuperiorDerecho"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(60, 290, 260, 220),
+                new Rectangle2D(0, 130, 130, 150),
                 ObstacleType.BLOCK,
-                "JVInn"
+                "papeles"
         ));
 
         obstacles.add(new Obstacle(
-                new Rectangle2D(1070, 55, 250, 200),
+                new Rectangle2D(740, 130, 130, 100),
                 ObstacleType.BLOCK,
-                "JVMayor"
+                "libros"
         ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(1170, 390, 200, 200),
-                ObstacleType.BLOCK,
-                "JVStore"
-        ));
-
-         obstacles.add(new Obstacle(
-            new Rectangle2D(150, 510, 40, 20),
-            ObstacleType.DOOR,
-            "door_JVInn"
-    ));
-
-
-    obstacles.add(new Obstacle(
-            new Rectangle2D(1156, 255, 40, 20),
-            ObstacleType.DOOR,
-            "door_JVMayor"
-    ));
-
-
-    obstacles.add(new Obstacle(
-            new Rectangle2D(1252, 590, 40, 20),
-            ObstacleType.DOOR,
-            "door_JVStore"
-    ));
-    
-        double faroX = 290.0;
-        double faroY = 585.0;
-        double faroWidth = 35;
-        double faroHeight = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(faroX, faroY, faroWidth, faroHeight),
-                ObstacleType.BLOCK,
-                "faro_izquierdo"
-        ));
-
-        double faro1X = 385.0;
-        double faro1Y = 678.0;
-        double faro1Width = 35;
-        double faro1Height = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(faro1X, faro1Y, faro1Width, faro1Height),
-                ObstacleType.BLOCK,
-                "faro_central"
-        ));
-
-        double faro2X = 483.0;
-        double faro2Y = 778.0;
-        double faro2Width = 35;
-        double faro2Height = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(faro2X, faro2Y, faro2Width, faro2Height),
-                ObstacleType.BLOCK,
-                "faro_derechoInferior"
-        ));
-
-        double faro3X = 483.0;
-        double faro3Y = 349.0;
-        double faro3Width = 35;
-        double faro3Height = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(faro3X, faro3Y, faro3Width, faro3Height),
-                ObstacleType.BLOCK,
-                "faro_derechoInferior2"
-        ));
-
-        double faro4X = 920.0;
-        double faro4Y = 349.0;
-        double faro4Width = 35;
-        double faro4Height = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(faro4X, faro4Y, faro4Width, faro4Height),
-                ObstacleType.BLOCK,
-                "faros_derecha_1"
-        ));
-
-        double faro5X = 870.0;
-        double faro5Y = 780.0;
-        double faro5Width = 35;
-        double faro5Height = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(faro5X, faro5Y, faro5Width, faro5Height),
-                ObstacleType.BLOCK,
-                "faros_derecha_2"
-        ));
-
-        double faro6X = 970.0;
-        double faro6Y = 680.0;
-        double faro6Width = 35;
-        double faro6Height = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(faro6X, faro6Y, faro6Width, faro6Height),
-                ObstacleType.BLOCK,
-                "faros_derecha_3"
-        ));
-
-        double faro7X = 1059.86;
-        double faro7Y = 584.26;
-        double faro7Width = 35;
-        double faro7Height = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(faro7X, faro7Y, faro7Width, faro7Height),
-                ObstacleType.BLOCK,
-                "faros_derecha_4"
-        ));
-
-        double arbol7X = 20.13;
-        double arbol7Y = 152.00;
-        double arbol7Width = 60;
-        double arbol7Height = 95;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(arbol7X, arbol7Y, arbol7Width, arbol7Height),
-                ObstacleType.BLOCK,
-                "arbol_izq_sup"
-        ));
-
-        double pX = 0;
-        double pY = 0;
-        double pWidth = 288;
-        double pHeight = 140;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(pX, pY, pWidth, pHeight),
-                ObstacleType.BLOCK,
-                "piscina"
-        ));
-
-        double bX = 205;
-        double bY = 150;
-        double bWidth = 25;
-        double bHeight = 25;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(bX, bY, bWidth, bHeight),
-                ObstacleType.BLOCK,
-                "maderaSuperior"
-        ));
-
-        double b1X = 250.00;
-        double b1Y = 150;
-        double b1Width = 25;
-        double b1Height = 35;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(b1X, b1Y, b1Width, b1Height),
-                ObstacleType.BLOCK,
-                "troncoSuperior"
-        ));
-
-        double e1X = 430.00;
-        double e1Y = 50;
-        double e1Width = 90;
-        double e1Height = 70;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(e1X, e1Y, e1Width, e1Height),
-                ObstacleType.BLOCK,
-                "estatua1"
-        ));
-
-        double e2X = 915.00;
-        double e2Y = 50;
-        double e2Width = 90;
-        double e2Height = 70;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(e2X, e2Y, e2Width, e2Height),
-                ObstacleType.BLOCK,
-                "estatua2"
-        ));
-
-        double mX = 580.00;
-        double mY = 0;
-        double mWidth = 280;
-        double mHeight = 70;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(mX, mY, mWidth, mHeight),
-                ObstacleType.BLOCK,
-                "museo"
-        ));
-
-        double m1X = 530.00;
-        double m1Y = 0;
-        double m1Width = 40;
-        double m1Height = 40;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(m1X, m1Y, m1Width, m1Height),
-                ObstacleType.BLOCK,
-                "maceta1"
-        ));
-
-        double m2X = 870.00;
-        double m2Y = 0;
-        double m2Width = 40;
-        double m2Height = 40;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(m2X, m2Y, m2Width, m2Height),
-                ObstacleType.BLOCK,
-                "maceta2"
-        ));
-
-        double sX = 580;
-        double sY = 285;
-        double sWidth = 40;
-        double sHeight = 25;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(sX, sY, sWidth, sHeight),
-                ObstacleType.BLOCK,
-                "sennal"
-        ));
-
-        // Puedes añadir más obstáculos aquí si los necesitas
     }
 
     private void drawDebugObstacles() {
@@ -582,7 +322,7 @@ public class FieldVillage {
 
         if (!debugEnabled) return;
 
-        for (Obstacle ob : obstacles) {
+        for (JVMayor.Obstacle ob : obstacles) {
             Rectangle rect = new Rectangle(
                     ob.collisionRect.getMinX(),
                     ob.collisionRect.getMinY(),
@@ -611,14 +351,9 @@ public class FieldVillage {
                     rect.setFill(Color.rgb(0, 128, 0, 0.4));
                     rect.setStroke(Color.rgb(0, 64, 0, 0.8));
                     break;
-                 case DOOR:
-                    rect.setFill(Color.rgb(255, 215, 0, 0.5));
-                    rect.setStroke(Color.GOLD);
-                    break;
                 default:
                     rect.setFill(Color.rgb(255, 0, 0, 0.3));
                     rect.setStroke(Color.RED);
-                    
             }
 
             rect.getProperties().put("tag", "debug_obstacle");
@@ -628,33 +363,26 @@ public class FieldVillage {
     }
 
     // ---------------- movimiento y entradas ----------------
-    
+
     private void positionHeroAtEntrance() {
-
-    double startX = (worldW - HERO_W) / 2.0;
+        double startX = (worldW - HERO_W) / 2.0;
         double startY = worldH - HERO_H - 8.0;
-    
-    startX = clamp(startX, 0, Math.max(0, worldW - HERO_W));
-    startY = clamp(startY, 0, Math.max(0, worldH - HERO_H));
 
-    Rectangle2D heroRect = new Rectangle2D(startX, startY, HERO_W, HERO_H);
-    for (Obstacle ob : obstacles) {
-        // IGNORAR PUERTAS al posicionar
-        if (ob.type == ObstacleType.DOOR) {
-            continue;
+        startX = clamp(startX, 0, Math.max(0, worldW - HERO_W));
+        startY = clamp(startY, 0, Math.max(0, worldH - HERO_H));
+
+        Rectangle2D heroRect = new Rectangle2D(startX, startY, HERO_W, HERO_H);
+        for (JVMayor.Obstacle ob : obstacles) {
+            if (heroRect.intersects(ob.collisionRect)) {
+                startY = ob.collisionRect.getMinY() - HERO_H - 5;
+                break;
+            }
         }
-        
-        if (heroRect.intersects(ob.collisionRect)) {
-            // Si colisiona, mover un poco
-            startY = ob.collisionRect.getMinY() - HERO_H - 5;
-            break;
-        }
+
+        heroView.setLayoutX(startX);
+        heroView.setLayoutY(startY);
+        updateCamera();
     }
-
-    heroView.setLayoutX(startX);
-    heroView.setLayoutY(startY);
-    updateCamera();
-}
 
     private void createStartRectAtHeroStart() {
         if (startRect != null) {
@@ -675,25 +403,6 @@ public class FieldVillage {
         if (!world.getChildren().contains(startRect)) {
             world.getChildren().add(startRect);
         }
-        
-        boolean intersectsDoor = false;
-    for (Obstacle ob : obstacles) {
-        if (ob.type == ObstacleType.DOOR) {
-            if (startRect.getBoundsInParent().intersects(
-                ob.collisionRect.getMinX(), ob.collisionRect.getMinY(),
-                ob.collisionRect.getWidth(), ob.collisionRect.getHeight())) {
-                intersectsDoor = true;
-                break;
-            }
-        }
-    }
-    
-    if (intersectsDoor) {
-        // Mover startRect a una posición segura
-        startRect.setX(startRect.getX() + 100);
-        startRect.setY(startRect.getY() + 100);
-    }
-    
         startRect.toBack();
         heroView.toFront();
     }
@@ -701,42 +410,7 @@ public class FieldVillage {
     private void installInputHandlers() {
         root.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
             KeyCode k = ev.getCode();
-       
-        
-        // Agrega esto para teletransportarte a JVInn (tecla T)
-        if (k == KeyCode.T) {
-            System.out.println("[DEBUG] Teletransportando a JVInn...");
-            // Posición dentro de la colisión JVInn
-            heroView.setLayoutX(150);  // Dentro del rectángulo [60, 290] a [320, 510]
-            heroView.setLayoutY(350);
-            updateCamera();
-            ev.consume();
-            return;
-        }
-        
-        // Agrega esto para teletransportarte a JVMayor (tecla Y)
-        if (k == KeyCode.Y) {
-            System.out.println("[DEBUG] Teletransportando a JVMayor...");
-            // Posición dentro de la colisión JVMayor
-            heroView.setLayoutX(1150);  // Dentro del rectángulo [1070, 55] a [1320, 255]
-            heroView.setLayoutY(150);
-            updateCamera();
-            ev.consume();
-            return;
-        }
-        
-        // Agrega esto para teletransportarte a JVStore (tecla U)
-        if (k == KeyCode.U) {
-            System.out.println("[DEBUG] Teletransportando a JVStore...");
-            // Posición dentro de la colisión JVStore
-            heroView.setLayoutX(1250);  // Dentro del rectángulo [1170, 390] a [1370, 590]
-            heroView.setLayoutY(450);
-            updateCamera();
-            ev.consume();
-            return;
-        }
-        
-    
+
             if (k == KeyCode.W || k == KeyCode.UP) keys.add(KeyCode.W);
             if (k == KeyCode.S || k == KeyCode.DOWN) keys.add(KeyCode.S);
             if (k == KeyCode.A || k == KeyCode.LEFT) keys.add(KeyCode.A);
@@ -748,39 +422,33 @@ public class FieldVillage {
                 System.out.println("Hero direction: " + getHeroDirection().name());
             }
 
-            
+
 
             if (k == KeyCode.I || k == KeyCode.ADD || k == KeyCode.PLUS) {
                 clearInputState();
                 openInventory();
             }
 
-           if (k == KeyCode.ENTER) {
-    // PRIMERO: Verifica si está en el área de salida
-    if (onStartRect) {
-        clearInputState();
-        try {
-            if (game != null && game.getHero() != null) {
-                Hero h = game.getHero();
-                h.setLastLocation(Hero.Location.FIELD_VILLAGE);
-                h.setLastPosX(heroView.getLayoutX());
-                h.setLastPosY(heroView.getLayoutY());
-                try { game.createSaveGame(); } catch (Throwable ignored) {}
+            if (k == KeyCode.ENTER) {
+                if (onStartRect) {
+                    clearInputState();
+                    try {
+                        if (game != null && game.getHero() != null) {
+                            Hero h = game.getHero();
+                            h.setLastLocation(Hero.Location.FIELD_VILLAGE);
+                            h.setLastPosX(heroView.getLayoutX());
+                            h.setLastPosY(heroView.getLayoutY());
+                            try { game.createSaveGame(); } catch (Throwable ignored) {}
+                        }
+                    } catch (Throwable ignored) {}
+                    if (onExitCallback != null) {
+                        hide();
+                        onExitCallback.run();
+                    } else {
+                        hide();
+                    }
+                }
             }
-        } catch (Throwable ignored) {}
-        if (onExitCallback != null) {
-            hide();
-            onExitCallback.run();
-        } else {
-            hide();
-        }
-    }
-    // SEGUNDO: Verifica si está en una puerta
-    else if (currentInteractable != null) {
-        clearInputState();
-        enterInteractable(currentInteractable);
-    }
-}
 
             if (k == KeyCode.ESCAPE) {
                 clearInputState();
@@ -883,100 +551,87 @@ public class FieldVillage {
         };
     }
 
-   private void updateAndMove(double dt) {
-    double vx = 0;
-    double vy = 0;
-    if (keys.contains(KeyCode.A)) vx -= HERO_SPEED;
-    if (keys.contains(KeyCode.D)) vx += HERO_SPEED;
-    if (keys.contains(KeyCode.W)) vy -= HERO_SPEED;
-    if (keys.contains(KeyCode.S)) vy += HERO_SPEED;
+    private void updateAndMove(double dt) {
+        double vx = 0;
+        double vy = 0;
+        if (keys.contains(KeyCode.A)) vx -= HERO_SPEED;
+        if (keys.contains(KeyCode.D)) vx += HERO_SPEED;
+        if (keys.contains(KeyCode.W)) vy -= HERO_SPEED;
+        if (keys.contains(KeyCode.S)) vy += HERO_SPEED;
 
-    Direction newDir = (vx != 0 || vy != 0) ? directionFromVector(vx, vy) : Direction.NONE;
-    setDirectionIfChanged(newDir);
+        JVMayor.Direction newDir = (vx != 0 || vy != 0) ? directionFromVector(vx, vy) : JVMayor.Direction.NONE;
+        setDirectionIfChanged(newDir);
 
-    if (vx == 0 && vy == 0) {
-        checkInteractable();
-        showInteractableIndicator();
-        checkStartIntersection();
-        return;
+        if (vx == 0 && vy == 0) {
+            checkStartIntersection();
+            return;
+        }
+
+        moveHero(vx * dt, vy * dt);
     }
-
-    moveHero(vx * dt, vy * dt);
-}
 
     private void moveHero(double dx, double dy) {
-    double curX = heroView.getLayoutX();
-    double curY = heroView.getLayoutY();
+        double curX = heroView.getLayoutX();
+        double curY = heroView.getLayoutY();
 
-    double proposedX = clamp(curX + dx, 0, Math.max(0, worldW - HERO_W));
-    double proposedY = clamp(curY + dy, 0, Math.max(0, worldH - HERO_H));
+        double proposedX = clamp(curX + dx, 0, Math.max(0, worldW - HERO_W));
+        double proposedY = clamp(curY + dy, 0, Math.max(0, worldH - HERO_H));
 
-    Rectangle2D heroRect = new Rectangle2D(proposedX, proposedY, HERO_W, HERO_H);
-    boolean collision = false;
+        Rectangle2D heroRect = new Rectangle2D(proposedX, proposedY, HERO_W, HERO_H);
+        boolean collision = false;
 
-    for (Obstacle ob : obstacles) {
-        // IGNORAR PUERTAS - el héroe puede pasar por ellas
-        if (ob.type == ObstacleType.DOOR) {
-            continue; // Saltar puertas en la detección de colisión
-        }
-        
-        if (heroRect.intersects(ob.collisionRect)) {
-            collision = true;
-            break;
-        }
-    }
-
-    if (!collision) {
-        heroView.setLayoutX(proposedX);
-        heroView.setLayoutY(proposedY);
-    } else {
-        Rectangle2D heroRectX = new Rectangle2D(proposedX, curY, HERO_W, HERO_H);
-        Rectangle2D heroRectY = new Rectangle2D(curX, proposedY, HERO_W, HERO_H);
-
-        boolean canMoveX = true;
-        boolean canMoveY = true;
-
-        for (Obstacle ob : obstacles) {
-            // IGNORAR PUERTAS también aquí
-            if (ob.type == ObstacleType.DOOR) {
-                continue;
+        for (JVMayor.Obstacle ob : obstacles) {
+            if (heroRect.intersects(ob.collisionRect)) {
+                collision = true;
+                break;
             }
-            
-            if (heroRectX.intersects(ob.collisionRect)) canMoveX = false;
-            if (heroRectY.intersects(ob.collisionRect)) canMoveY = false;
         }
 
-        if (canMoveX) heroView.setLayoutX(proposedX);
-        if (canMoveY) heroView.setLayoutY(proposedY);
-    }
-    checkInteractable();
-    showInteractableIndicator();
-    checkStartIntersection();
-    updateCamera();
-}
+        if (!collision) {
+            heroView.setLayoutX(proposedX);
+            heroView.setLayoutY(proposedY);
+        } else {
+            Rectangle2D heroRectX = new Rectangle2D(proposedX, curY, HERO_W, HERO_H);
+            Rectangle2D heroRectY = new Rectangle2D(curX, proposedY, HERO_W, HERO_H);
 
-    private Direction directionFromVector(double vx, double vy) {
-        if (vx == 0 && vy == 0) return Direction.NONE;
+            boolean canMoveX = true;
+            boolean canMoveY = true;
+
+            for (JVMayor.Obstacle ob : obstacles) {
+                if (heroRectX.intersects(ob.collisionRect)) canMoveX = false;
+                if (heroRectY.intersects(ob.collisionRect)) canMoveY = false;
+            }
+
+            if (canMoveX) heroView.setLayoutX(proposedX);
+            if (canMoveY) heroView.setLayoutY(proposedY);
+        }
+        checkExitArea();
+        checkStartIntersection();
+        updateCamera();
+    }
+
+    private JVMayor.Direction directionFromVector(double vx, double vy) {
+        if (vx == 0 && vy == 0) return JVMayor.Direction.NONE;
         double angle = Math.toDegrees(Math.atan2(-vy, vx));
         if (angle < 0) angle += 360.0;
 
-        if (angle >= 337.5 || angle < 22.5) return Direction.E;
-        if (angle < 67.5) return Direction.NE;
-        if (angle < 112.5) return Direction.N;
-        if (angle < 157.5) return Direction.NW;
-        if (angle < 202.5) return Direction.W;
-        if (angle < 247.5) return Direction.SW;
-        if (angle < 292.5) return Direction.S;
-        if (angle < 337.5) return Direction.SE;
-        return Direction.NONE;
+        if (angle >= 337.5 || angle < 22.5) return JVMayor.Direction.E;
+        if (angle < 67.5) return JVMayor.Direction.NE;
+        if (angle < 112.5) return JVMayor.Direction.N;
+        if (angle < 157.5) return JVMayor.Direction.NW;
+        if (angle < 202.5) return JVMayor.Direction.W;
+        if (angle < 247.5) return JVMayor.Direction.SW;
+        if (angle < 292.5) return JVMayor.Direction.S;
+        if (angle < 337.5) return JVMayor.Direction.SE;
+        return JVMayor.Direction.NONE;
     }
 
-    private void setDirectionIfChanged(Direction newDir) {
-        if (newDir == null) newDir = Direction.NONE;
+    private void setDirectionIfChanged(JVMayor.Direction newDir) {
+        if (newDir == null) newDir = JVMayor.Direction.NONE;
         currentDirection = newDir;
     }
 
-    public Direction getHeroDirection() {
+    public JVMayor.Direction getHeroDirection() {
         return currentDirection;
     }
 
@@ -1026,90 +681,17 @@ public class FieldVillage {
         keys.clear();
     }
 
-    
- private void checkInteractable() {
-    currentInteractable = null;
-    Rectangle2D heroRect = new Rectangle2D(
-        heroView.getLayoutX(), 
-        heroView.getLayoutY(), 
-        HERO_W, 
-        HERO_H
-    );
-    
-    for (Obstacle ob : obstacles) {
-        if (heroRect.intersects(ob.collisionRect)) {
-            // Solo interaccionamos con puertas (DOOR)
-            if (ob.type == ObstacleType.DOOR) {
-                currentInteractable = ob;
-                break;
-            }
+    private boolean onExitArea = false;
+
+
+    private void checkExitArea() {
+        onExitArea = false;
+        if (startRect != null) {
+            onExitArea = heroView.getBoundsInParent().intersects(startRect.getBoundsInParent());
+            startRect.setFill(onExitArea ?
+                    Color.rgb(255, 120, 0, 0.42) :
+                    Color.rgb(0, 120, 255, 0.28));
         }
     }
+
 }
-    
-private void showInteractableIndicator() {
-    // Remover indicador anterior si existe
-    world.getChildren().removeIf(n -> "interact_indicator".equals(n.getProperties().get("tag")));
-    
-    if (currentInteractable != null) {
-        Text indicator = new Text("Presiona ENTER para entrar");
-        indicator.setStyle("-fx-font-size: 16px; -fx-fill: #FFFFFF; -fx-stroke: #ffffff; -fx-stroke-width: 2px;");
-        indicator.getProperties().put("tag", "interact_indicator");
-        
-        // Posicionar encima del héroe
-        double indicatorX = heroView.getLayoutX() + HERO_W/2 - indicator.getLayoutBounds().getWidth()/2;
-        double indicatorY = heroView.getLayoutY() - 10;
-        
-        indicator.setX(indicatorX);
-        indicator.setY(indicatorY);
-        indicator.setMouseTransparent(true);
-        
-        world.getChildren().add(indicator);
-        indicator.toFront();
-    }
-}
-    
-   private void enterInteractable(Obstacle interactable) {
-    final Point2D savedHeroTopLeft = getHeroMapTopLeft();
-    
-    clearInputState();
-    stopVillageMusic();
-    stopMover();
-    
-    try {
-        FXGL.getGameScene().removeUINode(root);
-    } catch (Throwable ignored) {}
-    
-    Runnable returnCallback = () -> {
-        Platform.runLater(() -> {
-            startVillageMusic("/Resources/music/fieldVillage.mp3");
-            try {
-                FXGL.getGameScene().addUINode(root);
-            } catch (Throwable ignored) {}
-            heroView.setLayoutX(savedHeroTopLeft.getX());
-            heroView.setLayoutY(savedHeroTopLeft.getY());
-            root.requestFocus();
-            clearInputState();
-            startMover();
-        });
-    };
-    
-    // Usa los IDs de las puertas, no de los edificios
-    if (interactable.id.equals("door_JVInn")) {
-        JVInn jvInn = new JVInn(game);
-        jvInn.showWithLoading(() -> {}, returnCallback);
-    } 
-    else if (interactable.id.equals("door_JVMayor")) {
-        JVMayor jvMayor = new JVMayor(game);
-        jvMayor.showWithLoading(() -> {}, returnCallback);
-    }
-    else if (interactable.id.equals("door_JVStore")) {
-        JVStore jvStore = new JVStore(game);
-        jvStore.showWithLoading(() -> {}, returnCallback);
-    }
-}
-   
-   
-}
-    
-    

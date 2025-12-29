@@ -17,7 +17,7 @@ public class Hero implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public enum Location {
-        MAP, FIELD_VILLAGE, FOREST_HOUSE,SWAMP, UNKNOWN
+        MAP, FIELD_VILLAGE, FOREST_HOUSE, SWAMP, SWAMP_DUNGEON, UNKNOWN
     }
 
     private String name;
@@ -32,6 +32,7 @@ public class Hero implements Serializable {
     private int life;
     private int actualLife;
     private int money;
+    private int defeatedMonsters;
     private LinkedList<Item> items;
     private Weapon actualWeapon;
     private Armor armor;
@@ -43,7 +44,7 @@ public class Hero implements Serializable {
     private double lastPosX = 0.0;
     private double lastPosY = 0.0;
 
-    public Hero(String name, Weapon weapon, Armor armor, BinaryTreeNode<Classes> root) {
+    public Hero(String name, Weapon weapon, Armor armor, Classes root) {
         setName(name);
         setLife(150);
         setActualLife(100);
@@ -58,13 +59,22 @@ public class Hero implements Serializable {
         setMoney(50);
         items = new LinkedList<>();
         actualWeapon = weapon;
-        BinaryTreeNode<Classes> heroRoot = new BinaryTreeNode<>(root.getInfo());
+        
+        BinaryTreeNode<Classes> heroRoot = new BinaryTreeNode<>(root);
         unlockedClasses = new GeneralTree<>(heroRoot);
-        //unlockedClasses = new GeneralTree<>(root);
+
         tasks = new ArrayDeque<>();
         completedTasks = new ArrayDeque<>();
         loadFxImage();
+        defeatedMonsters = 0;
+    }
 
+    public void growDefeatedMonsters() {
+        defeatedMonsters++;
+    }
+
+    public int getDefeatedMonsters() {
+        return defeatedMonsters;
     }
 
     public int getMoney() {
@@ -314,4 +324,81 @@ public class Hero implements Serializable {
     public void addTasks(Task t) {
         tasks.offer(t);
     }
+
+    public void completeTask(Task t) {
+        Queue<Task> aux = new ArrayDeque<>();
+        boolean found = false;
+        while (!tasks.isEmpty()) {
+            Task quest = tasks.poll();
+            if (t.getId().equalsIgnoreCase(quest.getId())) {
+                found = true;
+                completedTasks.push(quest);
+            }
+
+        }
+        while (!aux.isEmpty()) {
+            tasks.offer(aux.poll());
+        }
+    }
+
+    public boolean existsPendingTask(Task t) {
+        Queue<Task> aux = new ArrayDeque<>();
+        boolean found = false;
+        while (!tasks.isEmpty()) {
+            Task quest = tasks.poll();
+            if (t.getId().equalsIgnoreCase(quest.getId())) {
+                found = true;
+            }
+        }
+        while (!aux.isEmpty()) {
+            tasks.offer(aux.poll());
+        }
+        return found;
+    }
+
+    public boolean existsCompletedTask(Task t) {
+        Deque<Task> aux = new ArrayDeque<>();
+        boolean found = false;
+        while (!completedTasks.isEmpty()) {
+            Task quest = completedTasks.pop();
+            if (t.getId().equalsIgnoreCase(quest.getId())) {
+                found = true;
+            }
+        }
+        while (!aux.isEmpty()) {
+            completedTasks.push(aux.pop());
+        }
+        return found;
+    }
+
+    public Task searchPendingTask(Task task) {
+        Task t = null;
+        Queue<Task> aux = new ArrayDeque<>();
+        while (!tasks.isEmpty()) {
+            Task quest = tasks.poll();
+            if (t.getId().equalsIgnoreCase(quest.getId())) {
+                t = quest;
+            }
+        }
+        while (!aux.isEmpty()) {
+            tasks.offer(aux.poll());
+        }
+        return t;
+    }
+
+    public Task searchCompletedTask(Task task) {
+        Task t = null;
+        Deque<Task> aux = new ArrayDeque<>();
+        while (!completedTasks.isEmpty()) {
+            Task quest = tasks.poll();
+            if (t.getId().equalsIgnoreCase(quest.getId())) {
+                t = quest;
+            }
+        }
+        while (!aux.isEmpty()) {
+            completedTasks.push(aux.pop());
+        }
+        return t;
+    }
+
 }

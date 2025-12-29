@@ -4,6 +4,8 @@ import Runner.MainScreen;
 import Characters.Hero;
 import GUI.Swamp;
 import Logic.Game;
+import Misc.Classes;
+import Tree.InBreadthIterator;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
@@ -26,7 +28,6 @@ import javafx.scene.media.MediaPlayer;
 import javafx.scene.transform.Scale;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -320,6 +321,13 @@ public class GameMapScreen {
                 right = true;
             } else if (k == KeyCode.L) {
                 enterDebugSwamp();
+            }
+            else if (k == KeyCode.Q) {
+                InBreadthIterator<Classes> it = game.getHero().getUnlockedClasses().inBreadthIterator();
+                while(it.hasNext()){
+                    System.out.println(it.nextNode().getInfo().getClass().getSimpleName());
+                    
+                }
             }
 
             if (handled) {
@@ -923,7 +931,7 @@ public class GameMapScreen {
         String bg = "/Resources/textures/Battle/fieldBattle.png";
         stopMapMusic();
 
-        GUI.CombatScreen cs = new GUI.CombatScreen(game, bg, "Overworld", game.getHero());
+        GUI.CombatScreen cs = new GUI.CombatScreen(game, bg, "Overworld", game.getHero(), false, null);
 
         cs.setBattleMusicPath(combatMusicPath);
         //cs.setBattleMusicPath("/Resources/music/bossBattle2.mp3");

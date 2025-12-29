@@ -1,7 +1,6 @@
 package Characters;
 
 import Items.Weapon;
-import Misc.Classes;
 
 public class Boss extends Monster {
 

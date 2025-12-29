@@ -1,18 +1,30 @@
 package Items;
 
-public abstract class Weapon extends Item {
+import Utils.Buyable;
+
+public abstract class Weapon extends Item implements Buyable {
 
     protected int attack;
     protected int lifeSpan;
     protected String effect;
     protected String type;
+    protected int cost;
 
     public Weapon(String info, String name, String id, int attack, int lifeSpan,
-            String effect) {
+            String effect, int cost) {
         super(info, name, id);
         setAttack(attack);
         setLifeSpan(lifeSpan);
-        setEffect(effect);        
+        setEffect(effect);
+        setCost(cost);
+    }
+
+    public void setCost(int cost) {
+        this.cost = cost;
+    }
+
+    public int getCost() {
+        return cost;
     }
 
     public int getAttack() {

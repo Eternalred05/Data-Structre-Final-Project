@@ -73,4 +73,17 @@ public class Task implements Serializable {
         this.money = money;
     }
 
+    public void addReward(Item i) {
+        rewards.add(i);
+
+    }
+
+    public ArrayList<Item> getRewards() {
+        return rewards;
+    }
+
+    public void setRewards(ArrayList<Item> rewards) {
+        this.rewards = rewards;
+    }
+
 }

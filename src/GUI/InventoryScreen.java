@@ -275,7 +275,8 @@ public class InventoryScreen {
         grid.getChildren().addAll(armorTitle, armorValue);
         rightRow++;
 
-                Label levelProgressTitle = new Label("LEVEL PROGRESSION");
+
+        Label levelProgressTitle = new Label("LEVEL PROGRESSION");
         levelProgressTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #aaddff;");
         GridPane.setConstraints(levelProgressTitle, 0, 6, 2, 1);
         grid.getChildren().add(levelProgressTitle);
@@ -305,7 +306,6 @@ public class InventoryScreen {
 
         GridPane.setConstraints(levelProgressArea, 0, 7, 4, 2);
         grid.getChildren().add(levelProgressArea);
-
 
         scrollPane.setContent(grid);
         tab.setContent(scrollPane);
@@ -500,20 +500,50 @@ public class InventoryScreen {
                     String clsName = mapScreen != null ? mapScreen.getClass().getSimpleName() : "";
 
                     switch (clsName) {
-                        case "FieldVillage" ->
+                        case "FieldVillage" -> {
+                            h.setLastPosX(670.5704519999998);
+                            h.setLastPosY(864.0);
                             h.setLastLocation(Hero.Location.FIELD_VILLAGE);
-                        case "GameMapScreen" ->
+                        }
+                        case "JVInn" -> {
+                            h.setLastPosX(670.5704519999998);
+                            h.setLastPosY(864.0);
+                            h.setLastLocation(Hero.Location.FIELD_VILLAGE);
+                        }
+                        case "JVMayor" -> {
+                            h.setLastPosX(670.5704519999998);
+                            h.setLastPosY(864.0);
+                            h.setLastLocation(Hero.Location.FIELD_VILLAGE);
+                        }
+                        case "JVStore" -> {
+                            h.setLastPosX(670.5704519999998);
+                            h.setLastPosY(864.0);
+                            h.setLastLocation(Hero.Location.FIELD_VILLAGE);
+                        }
+                        case "GameMapScreen" ->{
+                            h.setLastPosX(682.4067800000003);
+                            h.setLastPosY(400.5119300000001);
                             h.setLastLocation(Hero.Location.MAP);
-                        case "ForestHouse" ->
+                        }
+                        case "ForestHouse" -> {
+                            h.setLastPosX(384.0);
+                            h.setLastPosY(576.0);
                             h.setLastLocation(Hero.Location.FOREST_HOUSE);
-                        case "Swamp" ->
+                        }
+                        case "Swamp" -> {
+                            h.setLastPosX(384.0);
+                            h.setLastPosY(607.059);
                             h.setLastLocation(Hero.Location.SWAMP);
+
+                        }
+                        case "SwampDungeon" -> {
+                            h.setLastPosX(500.1253860000012);
+                            h.setLastPosY(1200.0);
+                            h.setLastLocation(Hero.Location.SWAMP_DUNGEON);
+                        }
                         default ->
                             h.setLastLocation(Hero.Location.MAP);
                     }
-
-                    h.setLastPosX(pos.getX());
-                    h.setLastPosY(pos.getY());
                 }
 
                 boolean saved = game.createSaveGame();

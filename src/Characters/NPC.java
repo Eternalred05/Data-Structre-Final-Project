@@ -16,6 +16,10 @@ public abstract class NPC {
         setName(name);
     }
     
+    public String getMessageFromList(int pos){
+        return dialogue.get(pos);
+    }
+    
     public String getSpritePath() {
         return spritePath;
     }

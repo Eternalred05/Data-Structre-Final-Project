@@ -49,6 +49,7 @@ public class CombatScreen {
     private final Game game;
     private final List<Monster> monsters = new ArrayList<>();
     private final List<ImageView> monsterViews = new ArrayList<>();
+    private Boss boss;
     private final Random rnd = new Random();
     private final int origDefense;
 // Botones y selección por teclado
@@ -76,9 +77,13 @@ public class CombatScreen {
     // Label para mostrar vida del héroe (actual / total)
     private final Label heroHpLabel = new Label();
 
-    public CombatScreen(Game game, String bgPath, String encounter, Hero heroForIcon) {
+    public CombatScreen(Game game, String bgPath, String encounter, Hero heroForIcon, boolean bossFight, Boss monster) {
         this.game = game;
         origDefense = game.getHero().getDefense();
+
+        if (bossFight) {
+            boss = monster;
+        }
 
         root = new StackPane();
         root.setPrefSize(800, 600);
@@ -137,12 +142,8 @@ public class CombatScreen {
 
         // Hero HP label: esquina superior derecha
         setupHeroHpLabel();
-
-        // Generar entre 1 y 3 monstruos y colocarlos en monstersBox
-        int count = 1 + rnd.nextInt(3);
-        int i = 0;
-        while (i < count) {
-            Monster m = foundMonster(encounter);
+        if (bossFight) {
+            Monster m = createBoss(boss);
             monsters.add(m);
             ImageView mv = createMonsterView(m);
             monsterViews.add(mv);
@@ -154,9 +155,27 @@ public class CombatScreen {
             wrapper.getChildren().addAll(mv, name);
             wrapper.setMouseTransparent(true);
             monstersBox.getChildren().add(wrapper);
-            i = i + 1;
-        }
 
+        } else {
+            // Generar entre 1 y 3 monstruos y colocarlos en monstersBox
+            int count = 1 + rnd.nextInt(3);
+            int i = 0;
+            while (i < count) {
+                Monster m = foundMonster(encounter);
+                monsters.add(m);
+                ImageView mv = createMonsterView(m);
+                monsterViews.add(mv);
+                VBox wrapper = new VBox(6);
+                wrapper.setAlignment(Pos.CENTER);
+                Text name = new Text(m.getName());
+                name.setFill(Color.WHITE);
+                name.setFont(Font.font(12));
+                wrapper.getChildren().addAll(mv, name);
+                wrapper.setMouseTransparent(true);
+                monstersBox.getChildren().add(wrapper);
+                i = i + 1;
+            }
+        }
         // Crear botones y lógica de selección
         createActionButtons();
 
@@ -234,6 +253,13 @@ public class CombatScreen {
         return m;
     }
 
+    private Monster createBoss(Boss t) {
+        Monster m = new Monster(t.getActualWeapon(), t.getAttack(), t.getDefense(), t.getName(),
+                t.getSpritePath(), t.getLife(), t.getActualLife(), t.getExp(), t.getMoney(), t.getEncounter());;
+
+        return m;
+    }
+
     private ImageView createMonsterView(Monster m) {
         Image img = null;
         try {
@@ -241,10 +267,18 @@ public class CombatScreen {
         } catch (Throwable ignored) {
         }
         ImageView iv = new ImageView(img);
-        iv.setPreserveRatio(true);
-        iv.setFitWidth(88);
-        iv.setFitHeight(88);
-        iv.setSmooth(true);
+        if (boss == null) {
+            iv.setPreserveRatio(true);
+            iv.setFitWidth(95);
+            iv.setFitHeight(95);
+            iv.setSmooth(true);
+        } else {
+            iv.setPreserveRatio(true);
+            iv.setFitWidth(200);
+            iv.setFitHeight(200);
+            iv.setSmooth(true);
+        }
+
         return iv;
     }
 
@@ -454,6 +488,7 @@ public class CombatScreen {
         if (!endCombatNow && target != null && game.checkGameOver(target.getActualLife())) {
             game.getHero().sumExp(target.getExp());
             game.getHero().setMoney(game.getHero().getMoney() + target.getMoney());
+            game.getHero().growDefeatedMonsters();
             removeMonster(target);
             removedOne = true;
         }
