@@ -218,13 +218,10 @@ public class CombatScreen {
     private void updateHeroHpDisplay() {
         Platform.runLater(() -> {
             try {
-                if (game != null && game.getHero() != null) {
-                    int actual = game.getHero().getActualLife();
-                    int max = game.getHero().getLife();
-                    heroHpLabel.setText("HP: " + actual + " / " + max);
-                } else {
-                    heroHpLabel.setText("HP: - / -");
-                }
+                int actual = game.getHero().getActualLife();
+                int max = game.getHero().getLife();
+                heroHpLabel.setText("HP: " + actual + " / " + max);
+
             } catch (Throwable ignored) {
                 heroHpLabel.setText("HP: - / -");
             }
@@ -283,24 +280,9 @@ public class CombatScreen {
 
     private void createHeroIcon(Hero heroForIcon) {
         Image heroImg = null;
-        if (heroForIcon != null) {
-            try {
-                heroImg = heroForIcon.getImage();
-            } catch (Throwable ignored) {
-            }
-        }
-        if (heroImg == null && game != null && game.getHero() != null) {
-            try {
-                heroImg = game.getHero().getImage();
-            } catch (Throwable ignored) {
-            }
-        }
-        if (heroImg == null) {
-            try {
-                heroImg = new Image(getClass().getResourceAsStream(game.getHero().getSpritePath()));
-            } catch (Throwable ignored) {
-            }
-        }
+
+        heroImg = new Image(getClass().getResourceAsStream("/Resources/sprites/hero/heroCombat.png"));
+
         ImageView heroIv = new ImageView(heroImg);
         heroIv.setPreserveRatio(true);
         heroIv.setFitWidth(120);

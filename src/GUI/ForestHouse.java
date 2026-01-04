@@ -3,6 +3,7 @@ package GUI;
 import Runner.MainScreen;
 import Characters.Hero;
 import Logic.Game;
+import GUI.Swamp;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -52,23 +53,17 @@ public class ForestHouse {
     private final double VIEW_H = 600;
     private double worldW = VIEW_W;
     private double worldH = VIEW_H;
-
-    private Rectangle startRect;
+    
+     private Rectangle startRect;
     private boolean onStartRect = false;
-    private Rectangle houseEntranceRect;
-    private boolean onHouseEntranceRect = false;
-    private Rectangle houseExitRect;
-    private boolean onHouseExit = false;
-    private Rectangle floor2EntranceRect;
-    private boolean onFloor2Entrance = false;
-    private Rectangle floor2ExitRect;
-    private boolean onFloor2Exit = false;
 
-    private boolean entranceHouse = false;
-
+     private final List<Rectangle> transitionRects = new ArrayList<>();
+     
     private Runnable onExitCallback;
     private final Game game;
 
+    private boolean entranceHouse=false;
+    
     // Sistema de colisiones
     private final List<Obstacle> obstacles = new ArrayList<>();
     private boolean debugEnabled = false;
@@ -148,7 +143,7 @@ public class ForestHouse {
             // Luego posicionar al héroe
             positionHeroAtEntrance();
             createStartRectAtHeroStart();
-            createHouseEntranceRect();
+           createTransitionRects();
 
             PauseTransition wait = new PauseTransition(Duration.millis(600));
             wait.setOnFinished(e -> {
@@ -615,6 +610,78 @@ public class ForestHouse {
         ));
     }
 
+     private void  colisionsPassage(){
+        double heroTopLeftX = 15;
+        double heroTopLeftY = 1;
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(heroTopLeftX, heroTopLeftY, 5, 5),
+                ObstacleType.DECORATION,
+                "Bloque1"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(840, 1065, 10, 150),
+                ObstacleType.DECORATION,
+                "PosteIzq"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(1023, 1060, 22,20),
+                ObstacleType.DECORATION,
+                "PosteDerecho1"
+        ));
+        
+        obstacles.add(new Obstacle(
+                new Rectangle2D(1080, 1110,10, 100),
+                ObstacleType.DECORATION,
+                "PosteDerecho2"
+        ));
+        
+         obstacles.add(new Obstacle(
+                new Rectangle2D(1170, 0, 500,1200),
+                ObstacleType.TREE,
+                "Arbolesderecha"
+        ));
+         
+          obstacles.add(new Obstacle(
+                new Rectangle2D(0, 780,705, 500),
+                ObstacleType.TREE,
+                "ArbolesIzquierda"
+        ));
+          
+          obstacles.add(new Obstacle(
+                new Rectangle2D(0, 275,1200,132),
+                ObstacleType.TREE,
+                "ArbolesFinal"
+        ));
+          
+          obstacles.add(new Obstacle(
+                new Rectangle2D(653.4, 425.,705, 13),
+                ObstacleType.DECORATION,
+                "rio"
+        ));
+          
+           obstacles.add(new Obstacle(
+                new Rectangle2D(643.0,480,25,120),
+                ObstacleType.DECORATION,
+                "Altar"
+        ));
+          
+          obstacles.add(new Obstacle(
+                new Rectangle2D(570.0,420,27,120),
+                ObstacleType.DECORATION,
+                "AltarCesped1"
+        ));
+          
+           obstacles.add(new Obstacle(
+                new Rectangle2D(540.2,480.25,30,120),
+                ObstacleType.DECORATION,
+                "AltarCesped2"
+        ));
+    }
+    
+    
     // ---------------- movimiento , y entradas ----------------
     private void positionHeroAtEntrance() {
         double startX = (worldW - HERO_W) / 2.0;
@@ -659,102 +726,6 @@ public class ForestHouse {
         heroView.toFront();
     }
 
-    private void createHouseEntranceRect() {
-        if (houseEntranceRect != null) {
-            world.getChildren().remove(houseEntranceRect);
-            houseEntranceRect = null;
-        }
-
-        double rx = 352;
-        double ry = 397.98;
-        double rw = 50;
-        double rh = 20;
-
-        houseEntranceRect = new Rectangle(rx - 4, ry - 4, rw, rh);
-        houseEntranceRect.setFill(Color.rgb(0, 120, 255, 0.28));
-        houseEntranceRect.setStroke(Color.rgb(0, 80, 200, 0.9));
-        houseEntranceRect.setMouseTransparent(true);
-        houseEntranceRect.getProperties().put("tag", "house_entrance");
-
-        if (!world.getChildren().contains(houseEntranceRect)) {
-            world.getChildren().add(houseEntranceRect);
-        }
-        houseEntranceRect.toBack();
-        heroView.toFront();
-    }
-
-    private void createHouseExitRect() {
-        if (houseExitRect != null) {
-            world.getChildren().remove(houseExitRect);
-            houseEntranceRect = null;
-        }
-
-        double rx = 380;
-        double ry = 580;
-        double rw = 50;
-        double rh = 50;
-
-        houseExitRect = new Rectangle(rx - 4, ry - 4, rw, rh);
-        houseExitRect.setFill(Color.rgb(0, 120, 255, 0.28));
-        houseExitRect.setStroke(Color.rgb(0, 80, 200, 0.9));
-        houseExitRect.setMouseTransparent(true);
-        houseExitRect.getProperties().put("tag", "house_exit");
-
-        if (!world.getChildren().contains(houseExitRect)) {
-            world.getChildren().add(houseExitRect);
-        }
-        houseExitRect.toBack();
-        heroView.toFront();
-    }
-
-    private void createFloor2EntranceRect() {
-        if (floor2EntranceRect != null) {
-            world.getChildren().remove(floor2EntranceRect);
-            floor2EntranceRect = null;
-        }
-
-        double rx = 0;
-        double ry = 0;
-        double rw = 100;
-        double rh = 50;
-
-        floor2EntranceRect = new Rectangle(rx - 4, ry - 4, rw, rh);
-        floor2EntranceRect.setFill(Color.rgb(0, 120, 255, 0.28));
-        floor2EntranceRect.setStroke(Color.rgb(0, 80, 200, 0.9));
-        floor2EntranceRect.setMouseTransparent(true);
-        floor2EntranceRect.getProperties().put("tag", "floor_entrance");
-
-        if (!world.getChildren().contains(floor2EntranceRect)) {
-            world.getChildren().add(floor2EntranceRect);
-        }
-        floor2EntranceRect.toBack();
-        heroView.toFront();
-    }
-
-    private void createFloor2ExitRect() {
-        if (floor2ExitRect != null) {
-            world.getChildren().remove(floor2ExitRect);
-            floor2ExitRect = null;
-        }
-
-        double rx = 0;
-        double ry = 560;
-        double rw = 30;
-        double rh = 30;
-
-        floor2ExitRect = new Rectangle(rx - 4, ry - 4, rw, rh);
-        floor2ExitRect.setFill(Color.rgb(0, 120, 255, 0.28));
-        floor2ExitRect.setStroke(Color.rgb(0, 80, 200, 0.9));
-        floor2ExitRect.setMouseTransparent(true);
-        floor2ExitRect.getProperties().put("tag", "floor_entrance");
-
-        if (!world.getChildren().contains(floor2EntranceRect)) {
-            world.getChildren().add(floor2EntranceRect);
-        }
-        floor2EntranceRect.toBack();
-        heroView.toFront();
-    }
-
     private void installInputHandlers() {
         root.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
             KeyCode k = ev.getCode();
@@ -784,6 +755,7 @@ public class ForestHouse {
             }
 
             if (k == KeyCode.ENTER) {
+                String foundTag = null;
                 if (onStartRect) {
                     clearInputState();
                     try {
@@ -805,27 +777,25 @@ public class ForestHouse {
                     } else {
                         hide();
                     }
-                }
+                }else{
+                      for (Rectangle r : transitionRects) {
+                         if (heroView.getBoundsInParent().intersects(r.getBoundsInParent())) {
+                             foundTag = (String) r.getProperties().get("tag");
+                                break; // salimos del bucle
+                           } 
+                       }
 
-                if (onHouseEntranceRect) {
-                    entranceHouse = true;
-                    intoHouse(entranceHouse);
-                }
-                if (onFloor2Entrance) {
-                    floor2Into();
-
-                }
-
-                if (onHouseExit) {
-                    exitHouse();
-                }
-
-                if (onFloor2Exit) {
-                    entranceHouse = false;
-                    intoHouse(entranceHouse);
-                }
-            }
-
+                    if (foundTag != null) {
+                      if ("house_entrance".equals(foundTag)) {
+                          entranceHouse=true;
+                          intoHouse(entranceHouse);
+                       }else
+                          if("house_exit".equals(foundTag)){ 
+                            exitHouse();
+                       }
+                    }
+               }
+            }    
             if (k == KeyCode.ESCAPE) {
                 clearInputState();
 
@@ -875,7 +845,7 @@ public class ForestHouse {
 
             ev.consume();
         });
-
+     
         root.addEventFilter(KeyEvent.KEY_RELEASED, ev -> {
             KeyCode k = ev.getCode();
             if (k == KeyCode.W || k == KeyCode.UP) {
@@ -901,7 +871,7 @@ public class ForestHouse {
                 clearInputState();
             }
         });
-    }
+        }
 
     private void openInventory() {
         stopMover();
@@ -987,10 +957,7 @@ public class ForestHouse {
 
         if (vx == 0 && vy == 0) {
             checkStartIntersection();
-            checkHouseEntranceIntersection();
-            checkHouseExitIntersection();
-            checkfloor2EntranceIntersection();
-            checkfloor2EnxitIntersection();
+            
             return;
         }
 
@@ -1102,49 +1069,9 @@ public class ForestHouse {
         startRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
     }
 
-    private void checkHouseEntranceIntersection() {
-        if (houseEntranceRect == null) {
-            onHouseEntranceRect = false;
-            return;
-        }
-        boolean intersects = heroView.getBoundsInParent().intersects(houseEntranceRect.getBoundsInParent());
-        onHouseEntranceRect = intersects;
-        houseEntranceRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
-    }
-
-    private void checkHouseExitIntersection() {
-        if (houseExitRect == null) {
-            onHouseExit = false;
-            return;
-        }
-        boolean intersects = heroView.getBoundsInParent().intersects(houseExitRect.getBoundsInParent());
-        onHouseExit = intersects;
-        houseExitRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
-
-    }
-
-    private void checkfloor2EntranceIntersection() {
-        if (floor2EntranceRect == null) {
-            onFloor2Entrance = false;
-            return;
-        }
-        boolean intersects = heroView.getBoundsInParent().intersects(floor2EntranceRect.getBoundsInParent());
-        onFloor2Entrance = intersects;
-        floor2EntranceRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
-
-    }
-
-    private void checkfloor2EnxitIntersection() {
-        if (floor2ExitRect == null) {
-            onFloor2Exit = false;
-            return;
-        }
-        boolean intersects = heroView.getBoundsInParent().intersects(floor2ExitRect.getBoundsInParent());
-        onFloor2Exit = intersects;
-        floor2ExitRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
-
-    }
-
+    
+ 
+     
     private void updateCamera() {
         double heroCenterX = heroView.getLayoutX() + HERO_W / 2.0;
         double heroCenterY = heroView.getLayoutY() + HERO_H / 2.0;
@@ -1187,48 +1114,101 @@ public class ForestHouse {
     //---Metodo para cambiar el fondo la musica y las colisiones,y todo dentro del 1er piso-----
 
     private void intoHouse(boolean entranceHouse) {
+       transitionRects.clear();
         obstacles.clear(); //limpiando coaliciones
         colissionInSide();
         startRect = null;
-
+        
         loadBackgroundImage("/Resources/textures/forestHouse/1stFloorForestHouse.png");// cambiando fondo
 
         stopVillageMusic();
+       
         startVillageMusic("/Resources/music/interiorOST.mp3");//camniar musica
+        createTransitionRects();
         if (entranceHouse) {
             setHeroPosition(411.0, 576.0); //poisiconar heroe
         } else {
             setHeroPosition(40, 0);
-        }
-
-        createHouseExitRect();
-        createFloor2EntranceRect();
-
+        }        
     }
-
-    private void exitHouse() {
-        obstacles.clear();;
-        populateForestHouseObstacles();
-        houseExitRect = null;
-        createStartRectAtHeroStart();
-
-        loadBackgroundImage("/Resources/textures/forestHouse/foresthouseOutside2.png");// cambiando fondo
+    
+    private void exitHouse(){
+     transitionRects.clear();
+     obstacles.clear();
+     populateForestHouseObstacles();
+     createStartRectAtHeroStart();
+     
+     loadBackgroundImage("/Resources/textures/forestHouse/forestHouseOutside2.png");// cambiando fondo
 
         stopVillageMusic();
+       
         startVillageMusic("/Resources/music/forestHouse.mp3");//camniar musica
-
-        setHeroPosition(379.0, 410.0); //poisiconar heroe 
+        createTransitionRects();
+    
+        setHeroPosition(379.0,410);
+    
     }
+       
+    
+    private void intoSwamp() {
+       hide();
 
-    private void floor2Into() {
-        obstacles.clear();
-        colisicions2Floor();
-        createFloor2ExitRect();
-        houseExitRect = null;
+     Swamp swampScene = new Swamp(game);
 
-        loadBackgroundImage("/Resources/textures/forestHouse/2ndFloorForestHouse.png");// cambiando fondo
-        setHeroPosition(0, 530.0); //poisiconar heroe   
+  
+     swampScene.showWithLoading(() -> {
+         System.out.println("Swamp cargado correctamente");
+        }, () -> {
+         // al salir del Swamp: volver a la casa
+         showWithLoading(null, onExitCallback);
+        });   
     }
+    
+    // Crea todos los triggers de entrada/salida para ForestHouse
+private void createTransitionRects() {
+    transitionRects.clear();
+
+    // Entrada a la casa desde el exterior
+    Rectangle houseEntrance = new Rectangle(352, 398, 50, 20);
+    houseEntrance.getProperties().put("tag", "house_entrance");
+    transitionRects.add(houseEntrance);
+    
+    // Salida de la casa hacia el exterior
+    Rectangle houseExit = new Rectangle(380, 580, 50, 50);
+    houseExit.getProperties().put("tag", "house_exit");
+    transitionRects.add(houseExit);
+
+    // Entrada al segundo piso
+    Rectangle floor2Entrance = new Rectangle(2, 0, 100, 50);
+    floor2Entrance.getProperties().put("tag", "floor2_entrance");
+    transitionRects.add(floor2Entrance);
+
+    // Salida del segundo piso hacia la planta baja
+    Rectangle floor2Exit = new Rectangle(0, 560, 30, 30);
+    floor2Exit.getProperties().put("tag", "floor2_exit");
+    transitionRects.add(floor2Exit);
+
+    // Entrada al pasaje
+    Rectangle passageEntrance = new Rectangle(300, 71, 50, 50);
+    passageEntrance.getProperties().put("tag", "passage_entrance");
+    transitionRects.add(passageEntrance);
+
+    // Entrada al swamp
+    Rectangle swampEntrance = new Rectangle(0, 564, 20, 80);
+    swampEntrance.getProperties().put("tag", "swamp_entrance");
+    transitionRects.add(swampEntrance);
+
+    // Configuración visual (invisibles pero útiles para depuración)
+    for (Rectangle r : transitionRects) {
+        r.setFill(Color.color(0, 0, 0, 0.0)); // invisible
+        r.setStroke(null);
+        r.setMouseTransparent(true);
+        world.getChildren().add(r);
+        r.toBack();
+    }
+    heroView.toFront();
+}
+
+
 
 }
- 

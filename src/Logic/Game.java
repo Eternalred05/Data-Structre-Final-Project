@@ -10,10 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.time.LocalDateTime;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Queue;
 
 public class Game {
 
@@ -479,46 +476,55 @@ public class Game {
         //Main Quests
         addTasks(new Task("Explore the Misterious Sky Ruins.", "Search what is hidden in the Sky Island.", "M000", 10000, true));
         addTasks(new Task("Search the Toxic Orb.", "Complete the road of Swamp.", "M001", 1000, true));
-        getTasks().get(1).addReward(getItems().get(19));
+        getTasks().get(1).addReward(getItems().get(19)); // Orbe Toxico
         addTasks(new Task("Search the Lava Orb.", "Complete the road of Volcano.", "M002", 1000, true));
         addTasks(new Task("Battle against the swamp boss.", "Defeat the Swamp Boss Monster to get the toxic orb.", "M003", 0, true));
         addTasks(new Task("Get the Mayor's authorization.", "Talk with Village's Mayor.", "M003", 500, true));
         //Secondary Quests
         addTasks(new Task("Defeat 5 monsters.", "Kill 5 monsters anywhere.", "Q000", 500, false));
+        
+        getTasks().get(5).addReward(getItems().get(18)); // Raspberry
+        getTasks().get(5).addReward(getItems().get(18)); // Raspberry
+                
         addTasks(new Task("Defeat 30 monsters.", "Kill 30 monsters anywhere.", "Q001", 1000, false));
         addTasks(new Task("Heal yourself.", "Use a healing item once.", "Q002", 100, false));
         //Task(String name, String info, String id, int money, boolean mainQuest)
     }
-    
-    public void createVillagers(){ 
+
+    public void createVillagers() {
         //Town
-        
-        //0
-        characters.add(new Villager(true, null, "Morty", "/Resources/sprites/morty.png", tasks.get(5)));
-        characters.get(0).getDialogue().add(
-        "Hi!. Troubles with monsters?. If you defeat 5 creatures I'll give you something.");
-        characters.get(0).getDialogue().add(
-        "Wow, you have defeated 5 monsters!, please receive this gift: ... .");
-        //1
-        characters.add(new Villager(false, null, "Falco", "/Resources/sprites/falco.png", null));
-        characters.get(1).getDialogue().add(
-        "What a beautiful day.");
-        //2
-        characters.add(new Villager(false, null, "Cat", "/Resources/sprites/cat.png", null));
-        characters.get(2).getDialogue().add(
-        "Meao.");
-        //3
-        characters.add(new Villager(true, items.get(23), "Mayor Giovanni", "/Resources/sprites/mayo.png", null));
-        characters.get(3).getDialogue().add(
-        "Welcome to the town hall! I have a letter for you.");
-        //4
-        characters.add(new Villager(false, null, "Host", "/Resources/sprites/host.png", null));
-        characters.get(4).getDialogue().add(
-        "Enjoy your stay.");
-        //5
-        characters.add(new Villager(false, null, "Merchant", "/Resources/sprites/merchant.png", null));
-        characters.get(5).getDialogue().add(
-        "What can I do for you?.");
+
+        //26
+        characters.add(new Villager(true, null, "Morty", "/Resources/sprites/NPC/morty.png", tasks.get(5)));
+        characters.get(26).getDialogue().add(
+                "Hi There! Would you mind if you defeat 5 creatures? I'll give you something special.");
+        characters.get(26).getDialogue().add(
+                "Wow, you have defeated 5 monsters!, please receive some raspberries and some money for the trouble ... .");
+        characters.get(26).getDialogue().add(
+                "What a nice day isn't it? .");
+        characters.get(26).getDialogue().add(
+                "Hello Traveler, all kind of people are welcome to our village .");
+
+        //27
+        characters.add(new Villager(false, null, "Falco", "/Resources/sprites/NPC/falco.png", null));
+        characters.get(27).getDialogue().add(
+                "What a beautiful day.");
+        //28
+        characters.add(new Villager(false, null, "Cat", "/Resources/sprites/NPC/cat.png", null));
+        characters.get(28).getDialogue().add(
+                "Meao.");
+        //29
+        characters.add(new Villager(true, items.get(23), "Mayor Giovanni", "/Resources/sprites/NPC/mayo.png", null));
+        characters.get(29).getDialogue().add(
+                "Welcome to the town hall! I have a letter for you.");
+        //30
+        characters.add(new Villager(false, null, "Host", "/Resources/sprites/NPC/host.png", null));
+        characters.get(30).getDialogue().add(
+                "Enjoy your stay.");
+        //31
+        characters.add(new Villager(false, null, "Merchant", "/Resources/sprites/NPC/merchant.png", null));
+        characters.get(31).getDialogue().add(
+                "What can I do for you?.");
         //Villager(boolean gift, Item giftItem, String name, String sprite, Task task)
     }
 
@@ -535,18 +541,24 @@ public class Game {
 
     public void giveReward(boolean reward, Task t) {
         if (reward) {
+            hero.setMoney(hero.getMoney()+t.getMoney());
             for (Item i : t.getRewards()) {
                 hero.getItems().add(i);
             }
+            
         }
     }
 
-    public void completeSecondaryQ000() {
+    public boolean completeSecondaryQ000() {
+        boolean done = false;
         if (hero.getDefeatedMonsters() >= 5) {
             Task t = searchTask("Q000");
+            giveReward(true, t);
             t.setState(true);
             hero.completeTask(t);
+            done = true;
         }
+        return done;
     }
 
     public void completeMainM001() {

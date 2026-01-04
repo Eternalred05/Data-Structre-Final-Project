@@ -151,7 +151,7 @@ public class InventoryScreen {
         Hero hero = game.getHero();
         int row = 0;
 
-        ImageView heroIcon = new ImageView(hero.getImage());
+        ImageView heroIcon = new ImageView("/Resources/sprites/hero/heroFace.png");
         heroIcon.setFitWidth(120);
         heroIcon.setFitHeight(120);
         heroIcon.setStyle("-fx-effect: dropshadow(gaussian, #000000, 10, 0.5, 0, 0);");

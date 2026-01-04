@@ -117,6 +117,7 @@ public class MainScreen extends GameApplication {
         game.createItems();
         game.createMonsters();
         game.createTasks();
+        game.createVillagers();
 
     }
 
