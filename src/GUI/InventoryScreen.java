@@ -400,7 +400,7 @@ public class InventoryScreen {
     }
 
     // -------------------- WARES TAB --------------------
-    private Tab createWaresTab() {
+    protected Tab createWaresTab() {
         Tab tab = new Tab("Consumables");
         tab.setStyle("-fx-font-weight: bold;");
 

@@ -2,6 +2,8 @@ package GUI;
 
 import Logic.Game;
 import Characters.*;
+import Items.*;
+import GUI.InventoryScreen;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -28,9 +30,12 @@ import Runner.MainScreen;
 import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.SnapshotParameters;
 
 public class CombatScreen {
 
@@ -76,6 +81,9 @@ public class CombatScreen {
     // Label para mostrar vida del héroe (actual / total)
     private final Label heroHpLabel = new Label();
 
+    private StackPane inventoryOverlay = null;
+    private boolean inventoryOpen = false;
+
     public CombatScreen(Game game, String bgPath, String encounter, Hero heroForIcon, boolean bossFight, Boss monster) {
         this.game = game;
         origDefense = game.getHero().getDefense();
@@ -86,6 +94,7 @@ public class CombatScreen {
 
         root = new StackPane();
         root.setPrefSize(800, 600);
+        root.setFocusTraversable(true);
 
         // Fondo
         Image bg = null;
@@ -203,6 +212,244 @@ public class CombatScreen {
         if (path != null && !path.isBlank()) {
             this.battleMusicPath = path;
         }
+    }
+
+    
+    private void openInventoryDuringCombat() {
+        if (inventoryOpen || gameOverActive) {
+            return;
+        }
+
+        inventoryOpen = true;
+
+        // Pausar música de combate temporalmente
+        try {
+            if (battleMusic != null) {
+                battleMusic.pause();
+            }
+        } catch (Throwable ignored) {
+        }
+
+        // Crear overlay oscuro
+        inventoryOverlay = new StackPane();
+        inventoryOverlay.setPrefSize(800, 600);
+        inventoryOverlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.85);");
+        inventoryOverlay.setPickOnBounds(true);
+
+        // Crear contenedor principal
+        VBox mainContainer = new VBox(15);
+        mainContainer.setAlignment(Pos.TOP_CENTER);
+        mainContainer.setPrefSize(600, 450);
+        mainContainer.setStyle("-fx-background-color: rgba(20, 20, 35, 0.95); "
+                + "-fx-background-radius: 10; "
+                + "-fx-border-color: #2a2a3a; "
+                + "-fx-border-width: 2; "
+                + "-fx-border-radius: 10;");
+        mainContainer.setPadding(new Insets(20));
+
+        // Título
+        Label title = new Label("INVENTARIO DE COMBATE");
+        title.setFont(Font.font("System Bold", 24));
+        title.setTextFill(Color.WHITE);
+        title.setPadding(new Insets(0, 0, 15, 0));
+
+        // ScrollPane para items
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefViewportHeight(300);
+        scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        VBox itemsContainer = new VBox(8);
+        itemsContainer.setPadding(new Insets(10));
+        itemsContainer.setStyle("-fx-background-color: transparent;");
+
+        // Obtener items de curación del héroe
+        Hero hero = game.getHero();
+        LinkedList<Item> allItems = hero.getItems();
+        List<Wares> healingItems = new ArrayList<>();
+
+        for (Item item : allItems) {
+            if (item instanceof Wares ware) {
+                healingItems.add(ware);
+            }
+        }
+
+        if (healingItems.isEmpty()) {
+            Label noItems = new Label("No tienes items de curación.");
+            noItems.setStyle("-fx-font-size: 16px; -fx-text-fill: #888888; -fx-font-style: italic;");
+            noItems.setPadding(new Insets(20));
+            itemsContainer.getChildren().add(noItems);
+        } else {
+            for (Wares ware : healingItems) {
+                HBox itemRow = createHealingItemRow(ware);
+                itemsContainer.getChildren().add(itemRow);
+            }
+        }
+
+        scrollPane.setContent(itemsContainer);
+
+        // Botón de cerrar
+        Button closeButton = new Button("Cerrar (ESC)");
+        closeButton.setFont(Font.font("System Bold", 16));
+        closeButton.setPrefSize(180, 40);
+        closeButton.setStyle("-fx-background-color: linear-gradient(to bottom, #3a7bd5, #00d2ff); "
+                + "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; "
+                + "-fx-cursor: hand;");
+        closeButton.setOnAction(e -> closeCombatInventory());
+
+        HBox buttonBox = new HBox(15, closeButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        mainContainer.getChildren().addAll(title, scrollPane, buttonBox);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+        inventoryOverlay.getChildren().add(mainContainer);
+        StackPane.setAlignment(mainContainer, Pos.CENTER);
+
+        root.getChildren().add(inventoryOverlay);
+        inventoryOverlay.toFront();
+
+        // Configurar teclas
+        inventoryOverlay.setOnKeyPressed(ev -> {
+            KeyCode code = ev.getCode();
+            if (code == KeyCode.ESCAPE) {
+                closeCombatInventory();
+                ev.consume();
+            }
+            // Prevenir que otras teclas pasen al fondo
+            ev.consume();
+        });
+
+        // Hacer foco en el overlay
+        Platform.runLater(() -> {
+            inventoryOverlay.requestFocus();
+            inventoryOverlay.setFocusTraversable(true);
+        });
+    }
+
+    // REEMPLAZAR createCombatItemRow por este nuevo método:
+    private HBox createHealingItemRow(Wares ware) {
+        HBox row = new HBox(15);
+        row.setPadding(new Insets(10, 15, 10, 15));
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setStyle("-fx-background-color: rgba(255, 255, 255, 0.08); "
+                + "-fx-background-radius: 6; "
+                + "-fx-border-color: rgba(255, 255, 255, 0.1); "
+                + "-fx-border-radius: 6;");
+
+        // Icono (opcional)
+        ImageView icon = new ImageView();
+        icon.setFitWidth(32);
+        icon.setFitHeight(32);
+        icon.setStyle("-fx-effect: dropshadow(gaussian, #000000, 3, 0.5, 0, 0);");
+
+        // Puedes añadir un icono si quieres
+        try {
+            Image potionImg = new Image(getClass().getResourceAsStream("/Resources/sprites/items/potion.png"));
+            icon.setImage(potionImg);
+        } catch (Throwable ignored) {
+            // Si no hay imagen, usar un rectángulo placeholder
+            Rectangle placeholder = new Rectangle(32, 32, Color.rgb(68, 255, 68, 0.5));
+            placeholder.setArcWidth(8);
+            placeholder.setArcHeight(8);
+            SnapshotParameters params = new SnapshotParameters();
+            params.setFill(Color.TRANSPARENT);
+            icon.setImage(placeholder.snapshot(params, null));
+        }
+
+        // Información del item
+        VBox infoBox = new VBox(3);
+
+        Label nameLabel = new Label(ware.getName());
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: white;");
+
+        Label healLabel = new Label("Curación: " + ware.getHealing() + " HP");
+        healLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #44ff44;");
+
+        Label descLabel = new Label("ID: " + ware.getId());
+        descLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #aaaaaa;");
+
+        infoBox.getChildren().addAll(nameLabel, healLabel, descLabel);
+
+        // Espaciador
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Botón de usar
+        Button useButton = new Button("USAR");
+        useButton.setFont(Font.font("System Bold", 14));
+        useButton.setMinWidth(100);
+        useButton.setMinHeight(35);
+        useButton.setStyle("-fx-background-color: linear-gradient(to bottom, #2a7d2a, #1b5e20); "
+                + "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4; "
+                + "-fx-cursor: hand; -fx-effect: dropshadow(gaussian, #000000, 3, 0.5, 0, 1);");
+
+        useButton.setOnAction(e -> {
+            handleUseWareInCombat(ware);
+            closeCombatInventory();
+        });
+
+        row.getChildren().addAll(icon, infoBox, spacer, useButton);
+
+        // Efecto hover
+        row.setOnMouseEntered(ev -> {
+            row.setStyle("-fx-background-color: rgba(255, 255, 255, 0.15); "
+                    + "-fx-background-radius: 6; "
+                    + "-fx-border-color: rgba(255, 255, 255, 0.3); "
+                    + "-fx-border-radius: 6;");
+        });
+
+        row.setOnMouseExited(ev -> {
+            row.setStyle("-fx-background-color: rgba(255, 255, 255, 0.08); "
+                    + "-fx-background-radius: 6; "
+                    + "-fx-border-color: rgba(255, 255, 255, 0.1); "
+                    + "-fx-border-radius: 6;");
+        });
+
+        return row;
+    }
+
+    private void handleUseWareInCombat(Wares ware) {
+        boolean healed = game.heal(ware);
+
+        if (healed) {
+            // Remover el item del inventario
+            game.getHero().getItems().remove(ware);
+            toastQueue.enqueue("¡Usaste " + ware.getName() + "! +" + ware.getHealing() + " HP");
+            updateHeroHpDisplay();
+
+            // Los monstruos atacan después de usar un item
+            monstersAttackAfterHeroAction();
+        } else {
+            toastQueue.enqueue("No puedes curarte ahora (HP completo).");
+        }
+    }
+
+    private void closeCombatInventory() {
+        Platform.runLater(() -> {
+            if (inventoryOverlay != null) {
+                // Remover del root
+                root.getChildren().remove(inventoryOverlay);
+                inventoryOverlay = null;
+            }
+
+            inventoryOpen = false;
+            root.setDisable(false);
+
+            // Reanudar música de combate
+            try {
+                if (battleMusic != null) {
+                    battleMusic.play();
+                }
+            } catch (Throwable ignored) {
+            }
+
+            // Restaurar foco al combate
+            root.requestFocus();
+
+            // Actualizar selección de botones
+            updateButtonSelection();
+        });
     }
 
     private void setupHeroHpLabel() {
@@ -323,10 +570,9 @@ public class CombatScreen {
             }
         });
         bItem.setOnAction(e -> {
-            if (!gameOverActive) {
+            if (!gameOverActive && !inventoryOpen) {
                 game.getHero().setDefense(origDefense);
-                toastQueue.enqueue("Item: acción ejecutada correctamente.");
-                monstersAttackAfterHeroAction();
+                openInventoryDuringCombat();
             }
         });
         bDefend.setOnAction(e -> {
@@ -360,52 +606,67 @@ public class CombatScreen {
 
     private void installKeyHandlers() {
         root.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
+            KeyCode code = ev.getCode();
+
+            // Si el inventario está abierto, manejar teclas aquí
+            if (inventoryOpen) {
+                if (code == KeyCode.ESCAPE) {
+                    closeCombatInventory();
+                    ev.consume();
+                    return;
+                }
+                // Consumir todas las teclas para evitar que pasen al fondo
+                ev.consume();
+                return;
+            }
+
+            // Si game over está activo, bloquear inputs
+            if (gameOverActive) {
+                ev.consume();
+                return;
+            }
+
             boolean handled = false;
 
-            if (gameOverActive) {
+            if (code == KeyCode.LEFT) {
+                selectedButtonIndex = Math.max(0, selectedButtonIndex - 1);
+                updateButtonSelection();
                 handled = true;
-            } else {
-                KeyCode code = ev.getCode();
-
-                if (code == KeyCode.LEFT) {
-                    selectedButtonIndex = Math.max(0, selectedButtonIndex - 1);
-                    updateButtonSelection();
-                    handled = true;
-                } else if (code == KeyCode.RIGHT) {
-                    selectedButtonIndex = Math.min(buttons.size() - 1, selectedButtonIndex + 1);
-                    updateButtonSelection();
-                    handled = true;
-                } else if (code == KeyCode.ENTER || code == KeyCode.SPACE) {
-                    Button sel = buttons.get(selectedButtonIndex);
-                    if (sel != null) {
-                        sel.fire();
-                    }
-                    handled = true;
-                } else if (code == KeyCode.DIGIT1 || code == KeyCode.NUMPAD1) {
-                    buttons.get(0).fire();
-                    handled = true;
-                } else if (code == KeyCode.DIGIT2 || code == KeyCode.NUMPAD2) {
-                    if (buttons.size() > 1) {
-                        buttons.get(1).fire();
-                    }
-                    handled = true;
-                } else if (code == KeyCode.DIGIT3 || code == KeyCode.NUMPAD3) {
-                    if (buttons.size() > 2) {
-                        buttons.get(2).fire();
-                    }
-                    handled = true;
-                } else if (code == KeyCode.DIGIT4 || code == KeyCode.NUMPAD4) {
-                    if (buttons.size() > 3) {
-                        buttons.get(3).fire();
-                    }
-                    handled = true;
+            } else if (code == KeyCode.RIGHT) {
+                selectedButtonIndex = Math.min(buttons.size() - 1, selectedButtonIndex + 1);
+                updateButtonSelection();
+                handled = true;
+            } else if (code == KeyCode.ENTER || code == KeyCode.SPACE) {
+                Button sel = buttons.get(selectedButtonIndex);
+                if (sel != null) {
+                    sel.fire();
                 }
-            }
+                handled = true;
+            } else if (code == KeyCode.DIGIT1 || code == KeyCode.NUMPAD1) {
+                buttons.get(0).fire();
+                handled = true;
+            } else if (code == KeyCode.DIGIT2 || code == KeyCode.NUMPAD2) {
+                if (buttons.size() > 1) {
+                    buttons.get(1).fire();
+                }
+                handled = true;
+            } else if (code == KeyCode.DIGIT3 || code == KeyCode.NUMPAD3) {
+                if (buttons.size() > 2) {
+                    buttons.get(2).fire();
+                }
+                handled = true;
+            } else if (code == KeyCode.DIGIT4 || code == KeyCode.NUMPAD4) {
+                if (buttons.size() > 3) {
+                    buttons.get(3).fire();
+                }
+                handled = true;
+            } 
 
             if (handled) {
                 ev.consume();
             }
         });
+
     }
 
     private void updateButtonSelection() {
