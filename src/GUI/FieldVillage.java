@@ -156,7 +156,7 @@ public class FieldVillage {
             addVillagerToList();
             renderNpcs();
 
-            // Luego posicionar al héroe
+            // posicionar al héroe
             positionHeroAtEntrance();
             createStartRectAtHeroStart();
 
@@ -672,8 +672,8 @@ public class FieldVillage {
             npcs.add(npc);
             iv = new ImageView(npc.getSpritePath());
             iv.setPreserveRatio(true);
-            iv.setFitWidth(80);
-            iv.setFitHeight(80);
+            iv.setFitWidth(60);
+            iv.setFitHeight(60);
             iv.setMouseTransparent(true);
             iv.setLayoutX(x);
             iv.setLayoutY(y);
@@ -927,7 +927,7 @@ public class FieldVillage {
         y = 564.4142460000003;
         addNpc(game.getCharacters().get(26), 463.021721999999, 547.2334619999993);// Morty 1
         obstacles.add(new Obstacle(
-                new Rectangle2D(x, y, 30, 30),
+                new Rectangle2D(x, y, 24, 24),
                 ObstacleType.NPC,
                 "Morty"
         ));
@@ -935,9 +935,25 @@ public class FieldVillage {
         x = 874.659689999999;
         y = 250.58789999999973;
         obstacles.add(new Obstacle(
-                new Rectangle2D(x, y, 30, 30),
+                new Rectangle2D(x, y, 24, 24),
                 ObstacleType.NPC,
                 "Cat1"
+        ));
+        addNpc(game.getCharacters().get(31), 141.29985599999966, 141.5015559999997);// Maya
+        x = 144.11312999999961;
+        y = 150.28780599999916;
+        obstacles.add(new Obstacle(
+                new Rectangle2D(x, y, 24, 24),
+                ObstacleType.NPC,
+                "Maya"
+        ));
+        addNpc(game.getCharacters().get(33), 1328.3121959999992, 691.752466);// Dog
+        x = 1339.178634;
+        y = 688.9790080000007;
+        obstacles.add(new Obstacle(
+                new Rectangle2D(x, y, 24, 24),
+                ObstacleType.NPC,
+                "Dog"
         ));
 
     }

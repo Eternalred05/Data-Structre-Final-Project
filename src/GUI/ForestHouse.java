@@ -3,7 +3,6 @@ package GUI;
 import Runner.MainScreen;
 import Characters.Hero;
 import Logic.Game;
-import GUI.Swamp;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -53,17 +52,18 @@ public class ForestHouse {
     private final double VIEW_H = 600;
     private double worldW = VIEW_W;
     private double worldH = VIEW_H;
-    
-     private Rectangle startRect;
+
+    private Rectangle startRect;
     private boolean onStartRect = false;
 
-     private final List<Rectangle> transitionRects = new ArrayList<>();
-     
+    private final List<Rectangle> transitionRects = new ArrayList<>();
+
     private Runnable onExitCallback;
     private final Game game;
 
-    private boolean entranceHouse=false;
-    
+    private boolean entranceHouse = false;
+    private boolean entrance2floor = false;
+
     // Sistema de colisiones
     private final List<Obstacle> obstacles = new ArrayList<>();
     private boolean debugEnabled = false;
@@ -143,7 +143,7 @@ public class ForestHouse {
             // Luego posicionar al héroe
             positionHeroAtEntrance();
             createStartRectAtHeroStart();
-           createTransitionRects();
+            createTransitionRects();
 
             PauseTransition wait = new PauseTransition(Duration.millis(600));
             wait.setOnFinished(e -> {
@@ -419,72 +419,6 @@ public class ForestHouse {
         ));
     }
 
-    private void colisicions2Floor() {
-        double heroTopLeftX = 0;
-        double heroTopLeftY = 0;
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(heroTopLeftX, heroTopLeftY, 5, 5),
-                ObstacleType.DECORATION,
-                "Bloque1"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(0, 0, 800, 71),
-                ObstacleType.DECORATION,
-                "CortinasFondo"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(61.01, 77, 68, 77),
-                ObstacleType.DECORATION,
-                "Cama"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(0, 70, 230, 39),
-                ObstacleType.DECORATION,
-                "ComodasIzquirdaSupe"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(0, 295, 83, 15),
-                ObstacleType.DECORATION,
-                "Mesaizq"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(253, 582.0, 72, 15),
-                ObstacleType.DECORATION,
-                "MesaInferior"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(490.297, 90.72, 73, 20),
-                ObstacleType.DECORATION,
-                "Mesasuperior"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(640, 90.72, 150, 20),
-                ObstacleType.DECORATION,
-                "EstantesDercha"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(740, 395.0, 15, 55),
-                ObstacleType.DECORATION,
-                "Silla"
-        ));
-
-        obstacles.add(new Obstacle(
-                new Rectangle2D(588, 391.0, 117, 109),
-                ObstacleType.DECORATION,
-                "MesaMapas"
-        ));
-
-    }
-
     private void colissionInSide() {
         double heroTopLeftX = 0;
         double heroTopLeftY = 580;
@@ -610,7 +544,73 @@ public class ForestHouse {
         ));
     }
 
-     private void  colisionsPassage(){
+    private void colisicions2Floor() {
+        double heroTopLeftX = 0;
+        double heroTopLeftY = 0;
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(heroTopLeftX, heroTopLeftY, 5, 5),
+                ObstacleType.DECORATION,
+                "Bloque1"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(0, 0, 800, 71),
+                ObstacleType.DECORATION,
+                "CortinasFondo"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(61.01, 77, 68, 77),
+                ObstacleType.DECORATION,
+                "Cama"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(0, 70, 230, 39),
+                ObstacleType.DECORATION,
+                "ComodasIzquirdaSupe"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(0, 295, 83, 15),
+                ObstacleType.DECORATION,
+                "Mesaizq"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(253, 582.0, 72, 15),
+                ObstacleType.DECORATION,
+                "MesaInferior"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(490.297, 90.72, 73, 20),
+                ObstacleType.DECORATION,
+                "Mesasuperior"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(640, 90.72, 150, 20),
+                ObstacleType.DECORATION,
+                "EstantesDercha"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(740, 395.0, 15, 55),
+                ObstacleType.DECORATION,
+                "Silla"
+        ));
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(588, 391.0, 117, 109),
+                ObstacleType.DECORATION,
+                "MesaMapas"
+        ));
+
+    }
+
+    private void colisionsPassage() {
         double heroTopLeftX = 15;
         double heroTopLeftY = 1;
 
@@ -619,69 +619,68 @@ public class ForestHouse {
                 ObstacleType.DECORATION,
                 "Bloque1"
         ));
-        
+
         obstacles.add(new Obstacle(
                 new Rectangle2D(840, 1065, 10, 150),
                 ObstacleType.DECORATION,
                 "PosteIzq"
         ));
-        
+
         obstacles.add(new Obstacle(
-                new Rectangle2D(1023, 1060, 22,20),
+                new Rectangle2D(1023, 1060, 22, 20),
                 ObstacleType.DECORATION,
                 "PosteDerecho1"
         ));
-        
+
         obstacles.add(new Obstacle(
-                new Rectangle2D(1080, 1110,10, 100),
+                new Rectangle2D(1080, 1110, 10, 100),
                 ObstacleType.DECORATION,
                 "PosteDerecho2"
         ));
-        
-         obstacles.add(new Obstacle(
-                new Rectangle2D(1170, 0, 500,1200),
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(1170, 0, 500, 1200),
                 ObstacleType.TREE,
                 "Arbolesderecha"
         ));
-         
-          obstacles.add(new Obstacle(
-                new Rectangle2D(0, 780,705, 500),
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(0, 780, 705, 500),
                 ObstacleType.TREE,
                 "ArbolesIzquierda"
         ));
-          
-          obstacles.add(new Obstacle(
-                new Rectangle2D(0, 275,1200,132),
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(0, 275, 1200, 132),
                 ObstacleType.TREE,
                 "ArbolesFinal"
         ));
-          
-          obstacles.add(new Obstacle(
-                new Rectangle2D(653.4, 425.,705, 13),
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(653.4, 425., 705, 13),
                 ObstacleType.DECORATION,
                 "rio"
         ));
-          
-           obstacles.add(new Obstacle(
-                new Rectangle2D(643.0,480,25,120),
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(643.0, 480, 25, 120),
                 ObstacleType.DECORATION,
                 "Altar"
         ));
-          
-          obstacles.add(new Obstacle(
-                new Rectangle2D(570.0,420,27,120),
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(570.0, 420, 27, 120),
                 ObstacleType.DECORATION,
                 "AltarCesped1"
         ));
-          
-           obstacles.add(new Obstacle(
-                new Rectangle2D(540.2,480.25,30,120),
+
+        obstacles.add(new Obstacle(
+                new Rectangle2D(540.2, 480.25, 30, 120),
                 ObstacleType.DECORATION,
                 "AltarCesped2"
         ));
     }
-    
-    
+
     // ---------------- movimiento , y entradas ----------------
     private void positionHeroAtEntrance() {
         double startX = (worldW - HERO_W) / 2.0;
@@ -777,25 +776,37 @@ public class ForestHouse {
                     } else {
                         hide();
                     }
-                }else{
-                      for (Rectangle r : transitionRects) {
-                         if (heroView.getBoundsInParent().intersects(r.getBoundsInParent())) {
-                             foundTag = (String) r.getProperties().get("tag");
-                                break; // salimos del bucle
-                           } 
-                       }
+                } else {
+                    for (Rectangle r : transitionRects) {
+                        if (heroView.getBoundsInParent().intersects(r.getBoundsInParent())) {
+                            foundTag = (String) r.getProperties().get("tag");
+                            break; // salimos del bucle
+                        }
+                    }
 
                     if (foundTag != null) {
-                      if ("house_entrance".equals(foundTag)) {
-                          entranceHouse=true;
-                          intoHouse(entranceHouse);
-                       }else
-                          if("house_exit".equals(foundTag)){ 
+                        if ("house_entrance".equals(foundTag)) {
+                            entranceHouse = true;
+                            intoHouse(entranceHouse);
+                        } else if ("house_exit".equals(foundTag)) {
                             exitHouse();
-                       }
+                        } else if ("floor2_entrance".equals(foundTag)) {
+                            entrance2floor = true;
+                            floor2Into(entrance2floor);
+                        } else if ("floor2_exit".equals(foundTag)) {
+                            entranceHouse = false;
+                            intoHouse(entranceHouse);
+                        } else if ("passage_entrance".equals(foundTag)) {
+                            intoPassage();
+                        } else if ("swamp_entrance".equals(foundTag)) {
+                            intoSwamp();
+                        } else if ("passage_exit".equals(foundTag)) {
+                            entrance2floor = false;
+                            floor2Into(entrance2floor);
+                        }
                     }
-               }
-            }    
+                }
+            }
             if (k == KeyCode.ESCAPE) {
                 clearInputState();
 
@@ -845,7 +856,7 @@ public class ForestHouse {
 
             ev.consume();
         });
-     
+
         root.addEventFilter(KeyEvent.KEY_RELEASED, ev -> {
             KeyCode k = ev.getCode();
             if (k == KeyCode.W || k == KeyCode.UP) {
@@ -871,7 +882,7 @@ public class ForestHouse {
                 clearInputState();
             }
         });
-        }
+    }
 
     private void openInventory() {
         stopMover();
@@ -957,7 +968,7 @@ public class ForestHouse {
 
         if (vx == 0 && vy == 0) {
             checkStartIntersection();
-            
+
             return;
         }
 
@@ -1069,9 +1080,6 @@ public class ForestHouse {
         startRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
     }
 
-    
- 
-     
     private void updateCamera() {
         double heroCenterX = heroView.getLayoutX() + HERO_W / 2.0;
         double heroCenterY = heroView.getLayoutY() + HERO_H / 2.0;
@@ -1114,101 +1122,152 @@ public class ForestHouse {
     //---Metodo para cambiar el fondo la musica y las colisiones,y todo dentro del 1er piso-----
 
     private void intoHouse(boolean entranceHouse) {
-       transitionRects.clear();
+        transitionRects.clear();
         obstacles.clear(); //limpiando coaliciones
         colissionInSide();
         startRect = null;
-        
+
         loadBackgroundImage("/Resources/textures/forestHouse/1stFloorForestHouse.png");// cambiando fondo
 
         stopVillageMusic();
-       
+
         startVillageMusic("/Resources/music/interiorOST.mp3");//camniar musica
         createTransitionRects();
         if (entranceHouse) {
             setHeroPosition(411.0, 576.0); //poisiconar heroe
         } else {
             setHeroPosition(40, 0);
-        }        
+        }
     }
-    
-    private void exitHouse(){
-     transitionRects.clear();
-     obstacles.clear();
-     populateForestHouseObstacles();
-     createStartRectAtHeroStart();
-     
-     loadBackgroundImage("/Resources/textures/forestHouse/forestHouseOutside2.png");// cambiando fondo
+
+    private void exitHouse() {
+        transitionRects.clear();
+        obstacles.clear();
+        populateForestHouseObstacles();
+        createStartRectAtHeroStart();
+
+        loadBackgroundImage("/Resources/textures/forestHouse/forestHouseOutside2.png");// cambiando fondo
 
         stopVillageMusic();
-       
+
         startVillageMusic("/Resources/music/forestHouse.mp3");//camniar musica
         createTransitionRects();
-    
-        setHeroPosition(379.0,410);
-    
+
+        setHeroPosition(379.0, 410);
+
     }
-       
-    
+
+    private void floor2Into(boolean entrance2floor) {
+        transitionRects.clear();
+        obstacles.clear();
+        colisicions2Floor();
+        String rect = "house_exit";
+        int pos;
+
+        loadBackgroundImage("/Resources/textures/forestHouse/2ndFloorForestHousePassage.png");// cambiando fondo
+        createTransitionRects();
+
+        pos = PostInArray(rect);
+        transitionRects.remove(pos);
+        if (entrance2floor) {
+            setHeroPosition(0, 530.0); //poisiconar heroe 
+        } else {
+            setHeroPosition(330, 71.0);
+        }
+    }
+
+    private void intoPassage() {
+        transitionRects.clear();
+        obstacles.clear();
+        colisionsPassage();
+        String rect = "floor2_exit";
+        int pos;
+
+        loadBackgroundImage("/Resources/textures/forestHouse/forestPassage.png");
+        createTransitionRects();
+        pos = PostInArray(rect);
+        transitionRects.remove(pos);
+
+        setHeroPosition(915.65, 1152.0); //poisiconar heroe   
+    }
+
     private void intoSwamp() {
-       hide();
+        hide();
 
-     Swamp swampScene = new Swamp(game);
+        Swamp swampScene = new Swamp(game);
 
-  
-     swampScene.showWithLoading(() -> {
-         System.out.println("Swamp cargado correctamente");
+        swampScene.showWithLoading(() -> {
+            System.out.println("Swamp cargado correctamente");
         }, () -> {
-         // al salir del Swamp: volver a la casa
-         showWithLoading(null, onExitCallback);
-        });   
+            // al salir del Swamp: volver a la casa
+            showWithLoading(null, onExitCallback);
+        });
     }
-    
+
     // Crea todos los triggers de entrada/salida para ForestHouse
-private void createTransitionRects() {
-    transitionRects.clear();
+    private void createTransitionRects() {
+        transitionRects.clear();
 
-    // Entrada a la casa desde el exterior
-    Rectangle houseEntrance = new Rectangle(352, 398, 50, 20);
-    houseEntrance.getProperties().put("tag", "house_entrance");
-    transitionRects.add(houseEntrance);
-    
-    // Salida de la casa hacia el exterior
-    Rectangle houseExit = new Rectangle(380, 580, 50, 50);
-    houseExit.getProperties().put("tag", "house_exit");
-    transitionRects.add(houseExit);
+        // Entrada a la casa desde el exterior
+        Rectangle houseEntrance = new Rectangle(352, 398, 50, 20);
+        houseEntrance.getProperties().put("tag", "house_entrance");
+        transitionRects.add(houseEntrance);
 
-    // Entrada al segundo piso
-    Rectangle floor2Entrance = new Rectangle(2, 0, 100, 50);
-    floor2Entrance.getProperties().put("tag", "floor2_entrance");
-    transitionRects.add(floor2Entrance);
+        // Salida de la casa hacia el exterior
+        Rectangle houseExit = new Rectangle(380, 580, 50, 50);
+        houseExit.getProperties().put("tag", "house_exit");
+        transitionRects.add(houseExit);
 
-    // Salida del segundo piso hacia la planta baja
-    Rectangle floor2Exit = new Rectangle(0, 560, 30, 30);
-    floor2Exit.getProperties().put("tag", "floor2_exit");
-    transitionRects.add(floor2Exit);
+        // Entrada al segundo piso
+        Rectangle floor2Entrance = new Rectangle(2, 0, 100, 50);
+        floor2Entrance.getProperties().put("tag", "floor2_entrance");
+        transitionRects.add(floor2Entrance);
 
-    // Entrada al pasaje
-    Rectangle passageEntrance = new Rectangle(300, 71, 50, 50);
-    passageEntrance.getProperties().put("tag", "passage_entrance");
-    transitionRects.add(passageEntrance);
+        // Salida del segundo piso hacia la planta baja
+        Rectangle floor2Exit = new Rectangle(0, 560, 30, 30);
+        floor2Exit.getProperties().put("tag", "floor2_exit");
+        transitionRects.add(floor2Exit);
 
-    // Entrada al swamp
-    Rectangle swampEntrance = new Rectangle(0, 564, 20, 80);
-    swampEntrance.getProperties().put("tag", "swamp_entrance");
-    transitionRects.add(swampEntrance);
+        // Entrada al pasaje
+        Rectangle passageEntrance = new Rectangle(300, 71, 50, 50);
+        passageEntrance.getProperties().put("tag", "passage_entrance");
+        transitionRects.add(passageEntrance);
 
-    // Configuración visual (invisibles pero útiles para depuración)
-    for (Rectangle r : transitionRects) {
-        r.setFill(Color.color(0, 0, 0, 0.0)); // invisible
-        r.setStroke(null);
-        r.setMouseTransparent(true);
-        world.getChildren().add(r);
-        r.toBack();
+        //Salida del passaje
+        Rectangle exitPassage = new Rectangle(900, 1150, 20, 80);
+        exitPassage.getProperties().put("tag", "passage_exit");
+        transitionRects.add(exitPassage);
+
+        // Entrada al swamp
+        Rectangle swampEntrance = new Rectangle(0, 564, 20, 80);
+        swampEntrance.getProperties().put("tag", "swamp_entrance");
+        transitionRects.add(swampEntrance);
+
+        // Configuración visual (invisibles pero útiles para depuración)
+        for (Rectangle r : transitionRects) {
+            r.setFill(Color.color(0, 0, 0, 0.0)); // invisible
+            r.setStroke(null);
+            r.setMouseTransparent(true);
+            world.getChildren().add(r);
+            r.toBack();
+        }
+        heroView.toFront();
     }
-    heroView.toFront();
-}
 
-
-
+    //metodo para buscarPosicion del rectangulo a borrar
+    private int PostInArray(String rect) {
+        int pos = -1;
+        int i = 0;
+        boolean found = false;
+        while (!found && i < transitionRects.size()) {
+            Rectangle r = transitionRects.get(i);
+            String tagFound = (String) r.getProperties().get("tag");
+            if (tagFound.equals(rect)) {
+                found = true;
+                pos = i;
+            }
+            i++;
+        }
+        return pos;
+    }
 }

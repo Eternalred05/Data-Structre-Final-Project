@@ -482,10 +482,10 @@ public class Game {
         addTasks(new Task("Get the Mayor's authorization.", "Talk with Village's Mayor.", "M003", 500, true));
         //Secondary Quests
         addTasks(new Task("Defeat 5 monsters.", "Kill 5 monsters anywhere.", "Q000", 500, false));
-        
+
         getTasks().get(5).addReward(getItems().get(18)); // Raspberry
         getTasks().get(5).addReward(getItems().get(18)); // Raspberry
-                
+
         addTasks(new Task("Defeat 30 monsters.", "Kill 30 monsters anywhere.", "Q001", 1000, false));
         addTasks(new Task("Heal yourself.", "Use a healing item once.", "Q002", 100, false));
         //Task(String name, String info, String id, int money, boolean mainQuest)
@@ -511,21 +511,32 @@ public class Game {
                 "What a beautiful day.");
         //28
         characters.add(new Villager(false, null, "Cat", "/Resources/sprites/NPC/cat.png", null));
-        characters.get(28).getDialogue().add(
-                "Meao.");
+        characters.get(28).getDialogue().add("Miau.");
+        characters.get(28).getDialogue().add("Clair Obscure expedition 33 is the deserved goty.");
+        characters.get(28).getDialogue().add("ITS TIME TO PAY FOR YOUR SINS.");
         //29
         characters.add(new Villager(true, items.get(23), "Mayor Giovanni", "/Resources/sprites/NPC/mayo.png", null));
         characters.get(29).getDialogue().add(
                 "Welcome to the town hall! I have a letter for you.");
         //30
         characters.add(new Villager(false, null, "Host", "/Resources/sprites/NPC/host.png", null));
-        characters.get(30).getDialogue().add(
-                "Enjoy your stay.");
+        characters.get(30).getDialogue().add("Enjoy your stay.");
         //31
-        characters.add(new Villager(false, null, "Merchant", "/Resources/sprites/NPC/merchant.png", null));
-        characters.get(31).getDialogue().add(
-                "What can I do for you?.");
+        characters.add(new Villager(false, null, "Maya", "/Resources/sprites/NPC/maya.png", null));
+        characters.get(31).getDialogue().add("Hello, what can I do for you?.");
+        characters.get(31).getDialogue().add("Monsters are more active this days, what do you think?.");
+        characters.get(31).getDialogue().add("The mayor is often worried about us, please talk to him.");
         //Villager(boolean gift, Item giftItem, String name, String sprite, Task task)
+        // 32
+        characters.add(new Villager(false, null, "Merchant", "/Resources/sprites/NPC/merchant.png", null));
+        characters.get(32).getDialogue().add(
+                "What can I do for you?.");
+        // 33
+        characters.add(new Villager(false, null, "Dog", "/Resources/sprites/NPC/sideDog.png", null));
+        characters.get(33).getDialogue().add("Woof.");
+        characters.get(33).getDialogue().add("GRRRRRRR.");
+        characters.get(33).getDialogue().add("WOOOOOOOOOOOOF");
+
     }
 
     public Task searchTask(String id) {
@@ -541,11 +552,11 @@ public class Game {
 
     public void giveReward(boolean reward, Task t) {
         if (reward) {
-            hero.setMoney(hero.getMoney()+t.getMoney());
+            hero.setMoney(hero.getMoney() + t.getMoney());
             for (Item i : t.getRewards()) {
                 hero.getItems().add(i);
             }
-            
+
         }
     }
 
