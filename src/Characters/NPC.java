@@ -8,6 +8,7 @@ public abstract class NPC {
     protected String name;
     protected ArrayList<String> dialogue;
     protected String spritePath;
+    protected String faceSpritePath;
     protected transient Image fxImage;
 
     public NPC(String name, String sprite) {
@@ -16,6 +17,7 @@ public abstract class NPC {
         setName(name);
         dialogue = new ArrayList<>();
     }
+    
 
     public String getMessageFromList(int pos) {
         return dialogue.get(pos);

@@ -856,9 +856,9 @@ public class GameMapScreen {
         } else {
 
             Alert a = new Alert(Alert.AlertType.INFORMATION);
-            a.setTitle("Villa");
+            a.setTitle("Village encountered");
             a.setHeaderText(null);
-            a.setContentText("Has interactuado con una villa.");
+            a.setContentText("The entrance is loacted elsewhere.");
             try {
                 if (root.getScene() != null && root.getScene().getWindow() != null) {
                     a.initOwner(root.getScene().getWindow());

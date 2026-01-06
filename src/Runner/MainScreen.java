@@ -40,13 +40,16 @@ import javafx.scene.text.FontWeight;
 import java.io.File;
 import java.net.URL;
 import java.util.Optional;
+import javafx.geometry.Insets;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.text.Text;
 
 public class MainScreen extends GameApplication {
 
     private Alert a;
     private Hero hero;
     private Game game;
-    private final String[] labels = {"Continuar", "Nueva Partida", "Configuración", "Salir"};
+    private final String[] labels = {"Continue", "New Game", "Settings", "Quit"};
     private int selectedIndex = 0;
     private static Rectangle cursor;
     private VBox menuBox;
@@ -66,6 +69,7 @@ public class MainScreen extends GameApplication {
         settings.setTitle("The Mistery of The Ruins");
         settings.setWidth(800);
         settings.setHeight(600);
+        settings.setVersion("0.1dev");
     }
 
     @Override
@@ -185,52 +189,61 @@ public class MainScreen extends GameApplication {
 
     private void updateCursorStyles() {
         int total = menuBox.getChildren().size();
-        if (total == 0) {
-            return;
-        }
-        if (selectedIndex >= total) {
-            selectedIndex = 0;
-        }
-        if (menuBox.getChildren().get(selectedIndex) instanceof Button
-                && ((Button) menuBox.getChildren().get(selectedIndex)).isDisable()) {
-            int start = selectedIndex;
-            boolean found = false;
-            int idx = selectedIndex;
-            while (!found) {
-                idx = (idx + 1) % total;
-                if (idx == start) {
-                    break;
-                }
-                Node n = menuBox.getChildren().get(idx);
-                if (n instanceof Button && !((Button) n).isDisable()) {
-                    selectedIndex = idx;
-                    found = true;
-                    break;
+        boolean hasItems = (total > 0);
+
+        if (hasItems) {
+            if (selectedIndex >= total) {
+                selectedIndex = 0;
+            }
+
+            Node selNode = menuBox.getChildren().get(selectedIndex);
+            boolean selIsDisabled = (selNode instanceof Button) && ((Button) selNode).isDisable();
+
+            if (selIsDisabled) {
+                int start = selectedIndex;
+                boolean found = false;
+                int idx = selectedIndex;
+                int attempts = 0;
+
+                while (!found && attempts < total) {
+                    idx = (idx + 1) % total;
+                    attempts++;
+                    Node n = menuBox.getChildren().get(idx);
+                    if (n instanceof Button && !((Button) n).isDisable()) {
+                        selectedIndex = idx;
+                        found = true;
+                    }
                 }
             }
-        }
-        for (int i = 0; i < total; i++) {
-            Node n = menuBox.getChildren().get(i);
-            if (n instanceof Button) {
-                Button b = (Button) n;
-                b.setWrapText(true);
-                b.setAlignment(Pos.CENTER);
-                if (b.isDisable()) {
-                    b.setStyle("-fx-background-color: rgba(80,80,80,0.5); -fx-text-fill: rgba(200,200,200,0.7); -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
-                    b.setEffect(null);
-                    b.setFont(Font.font(b.getFont().getFamily(), 20));
-                    continue;
-                }
-                if (i == selectedIndex) {
-                    b.setStyle("-fx-background-color: linear-gradient(#FFD54F, #FFC107); -fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: #FFD700; -fx-border-width: 2; -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
-                    b.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0, 0, 0, 0.45), 8, 0.3, 0, 2));
-                    b.setFont(Font.font(b.getFont().getFamily(), FontWeight.BOLD, 20));
+
+            for (int i = 0; i < total; i++) {
+                Node n = menuBox.getChildren().get(i);
+                boolean isButton = (n instanceof Button);
+
+                if (isButton) {
+                    Button b = (Button) n;
+                    b.setWrapText(true);
+                    b.setAlignment(Pos.CENTER);
+
+                    if (b.isDisable()) {
+                        b.setStyle("-fx-background-color: rgba(80,80,80,0.5); -fx-text-fill: rgba(200,200,200,0.7); -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
+                        b.setEffect(null);
+                        b.setFont(Font.font(b.getFont().getFamily(), 20));
+                    } else if (i == selectedIndex) {
+                        b.setStyle("-fx-background-color: linear-gradient(#FFD54F, #FFC107); -fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: #FFD700; -fx-border-width: 2; -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
+                        b.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0, 0, 0, 0.45), 8, 0.3, 0, 2));
+                        b.setFont(Font.font(b.getFont().getFamily(), FontWeight.BOLD, 20));
+                    } else {
+                        b.setStyle("-fx-background-color: rgba(0,0,0,0.6); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
+                        b.setEffect(null);
+                        b.setFont(Font.font(b.getFont().getFamily(), 20));
+                    }
                 } else {
-                    b.setStyle("-fx-background-color: rgba(0,0,0,0.6); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
-                    b.setEffect(null);
-                    b.setFont(Font.font(b.getFont().getFamily(), 20));
+
                 }
             }
+        } else {
+            selectedIndex = 0;
         }
     }
 
@@ -251,9 +264,9 @@ public class MainScreen extends GameApplication {
         String resultName = null;
         boolean finished = false;
         javafx.scene.control.TextInputDialog dlg = new javafx.scene.control.TextInputDialog();
-        dlg.setTitle("Nueva Partida");
-        dlg.setHeaderText("Introduce el nombre del jugador");
-        dlg.setContentText("Nombre:");
+        dlg.setTitle("New Game");
+        dlg.setHeaderText("Enter your name:");
+        dlg.setContentText("Name:");
         while (!finished) {
             Optional<String> opt = dlg.showAndWait();
             if (!opt.isPresent()) {
@@ -265,9 +278,9 @@ public class MainScreen extends GameApplication {
                     finished = true;
                 } else {
                     javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
-                    alert.setTitle("Nombre inválido");
-                    alert.setHeaderText("El nombre no puede estar vacío");
-                    alert.setContentText("Introduce un nombre válido.");
+                    alert.setTitle("Invalid Name");
+                    alert.setHeaderText("Name cannot be empty");
+                    alert.setContentText("Introduce a valid name for the hero.");
                     alert.showAndWait();
                     dlg.getEditor().setText("");
                 }
@@ -278,181 +291,207 @@ public class MainScreen extends GameApplication {
 
     private void showConfigScreen() {
         Platform.runLater(() -> {
-            if (configOpen) {
-                return;
-            }
-            configOpen = true;
-            for (Node n : menuBox.getChildren()) {
-                if (n instanceof Button) {
-                    ((Button) n).setDisable(true);
-                }
-            }
-            StackPane overlay = new StackPane();
-            overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
-            overlay.setPrefSize(800, 600);
-            overlay.setCursor(Cursor.DEFAULT);
-            overlay.setPickOnBounds(true);
-            VBox content = new VBox(16);
-            content.setAlignment(Pos.CENTER);
-            content.setStyle("-fx-background-color: rgba(30,30,30,0.95); -fx-padding: 20; -fx-background-radius: 8;");
-            content.setMaxWidth(420);
-            Label title = new Label("Configuración");
-            title.setFont(Font.font(22));
-            title.setTextFill(Color.WHITE);
-            Label volLabel = new Label();
-            volLabel.setTextFill(Color.WHITE);
-            volLabel.setFont(Font.font(14));
-            double initialVolume = volumeSetting;
-            try {
-                Object audioRoot = null;
-                try {
-                    var m = FXGL.class.getMethod("getAudioPlayer");
-                    audioRoot = m.invoke(null);
-                } catch (NoSuchMethodException ignored) {
-                }
-                if (audioRoot == null) {
-                    try {
-                        var m2 = FXGL.class.getMethod("getAudio");
-                        audioRoot = m2.invoke(null);
-                    } catch (NoSuchMethodException ignored) {
+            boolean shouldOpen = !configOpen;
+
+            if (shouldOpen) {
+                configOpen = true;
+
+                for (Node n : menuBox.getChildren()) {
+                    if (n instanceof Button) {
+                        ((Button) n).setDisable(true);
                     }
                 }
-                if (audioRoot != null) {
-                    Class<?> cls = audioRoot.getClass();
-                    String[] getters = {"getMusicVolume", "getSoundVolume", "getGlobalVolume", "getVolume"};
-                    for (String name : getters) {
+
+                StackPane overlay = new StackPane();
+                overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
+                overlay.setPrefSize(800, 600);
+                overlay.setCursor(Cursor.DEFAULT);
+                overlay.setPickOnBounds(true);
+
+                VBox content = new VBox(16);
+                content.setAlignment(Pos.CENTER);
+                content.setStyle("-fx-background-color: rgba(30,30,30,0.95); -fx-padding: 20; -fx-background-radius: 8;");
+                content.setMaxWidth(420);
+
+                Label title = new Label("Game Settings");
+                title.setFont(Font.font(22));
+                title.setTextFill(Color.WHITE);
+
+                Label volLabel = new Label();
+                volLabel.setTextFill(Color.WHITE);
+                volLabel.setFont(Font.font(14));
+
+                double initialVolume = volumeSetting;
+                try {
+                    Object audioRoot = null;
+                    try {
+                        var m = FXGL.class.getMethod("getAudioPlayer");
+                        audioRoot = m.invoke(null);
+                    } catch (NoSuchMethodException ignored) {
+                    }
+
+                    if (audioRoot == null) {
                         try {
-                            var gm = cls.getMethod(name);
-                            Object val = gm.invoke(audioRoot);
-                            if (val instanceof Number) {
-                                initialVolume = ((Number) val).doubleValue();
-                                break;
-                            }
+                            var m2 = FXGL.class.getMethod("getAudio");
+                            audioRoot = m2.invoke(null);
                         } catch (NoSuchMethodException ignored) {
                         }
                     }
-                }
-            } catch (Throwable ignored) {
-            }
-            Slider volSlider = new Slider(0, 1, initialVolume);
-            volSlider.setMajorTickUnit(0.1);
-            volSlider.setBlockIncrement(0.05);
-            volSlider.setShowTickLabels(true);
-            volSlider.setShowTickMarks(true);
-            volSlider.setSnapToTicks(false);
-            volLabel.setText(String.format("Volumen: %d%%", (int) (volSlider.getValue() * 100)));
-            volSlider.valueProperty().addListener((obs, oldV, newV) -> {
-                int pct = (int) Math.round(newV.doubleValue() * 100);
-                volLabel.setText("Volumen: " + pct + "%");
-                applyVolume(newV.doubleValue());
-            });
-            Button deleteBtn = new Button("Borrar partida");
-            deleteBtn.setMinWidth(200);
-            deleteBtn.setStyle("-fx-background-color: linear-gradient(#E57373,#EF5350); -fx-text-fill: white; -fx-font-weight: bold;");
-            deleteBtn.setOnAction(e -> {
-                boolean deleted = false;
-                if (game != null && game.getSave() != null) {
-                    File saveFile = game.getSave();
-                    if (saveFile.exists()) {
-                        deleted = saveFile.delete();
+
+                    if (audioRoot != null) {
+                        Class<?> cls = audioRoot.getClass();
+                        String[] getters = {"getMusicVolume", "getSoundVolume", "getGlobalVolume", "getVolume"};
+                        boolean found = false;
+                        for (int i = 0; i < getters.length && !found; i++) {
+                            String name = getters[i];
+                            try {
+                                var gm = cls.getMethod(name);
+                                Object val = gm.invoke(audioRoot);
+                                if (val instanceof Number) {
+                                    initialVolume = ((Number) val).doubleValue();
+                                    found = true;
+                                }
+                            } catch (NoSuchMethodException ignored) {
+                            }
+                        }
                     }
+                } catch (Exception ignored) {
                 }
-                if (!deleted && game != null && game.getArchives() != null) {
-                    File arch = game.getArchives();
-                    if (arch.exists()) {
-                        deleted = arch.delete();
+
+                Slider volSlider = new Slider(0, 1, initialVolume);
+                volSlider.setMajorTickUnit(0.1);
+                volSlider.setBlockIncrement(0.05);
+                volSlider.setShowTickLabels(true);
+                volSlider.setShowTickMarks(true);
+                volSlider.setSnapToTicks(false);
+                volLabel.setText(String.format("Volume: %d%%", (int) (volSlider.getValue() * 100)));
+                volSlider.valueProperty().addListener((obs, oldV, newV) -> {
+                    int pct = (int) Math.round(newV.doubleValue() * 100);
+                    volLabel.setText("Volume: " + pct + "%");
+                    applyVolume(newV.doubleValue());
+                });
+
+                Button deleteBtn = new Button("Erase savefile");
+                deleteBtn.setMinWidth(200);
+                deleteBtn.setStyle("-fx-background-color: linear-gradient(#E57373,#EF5350); -fx-text-fill: white; -fx-font-weight: bold;");
+                deleteBtn.setOnAction(e -> {
+                    boolean deleted = false;
+                    if (game != null && game.getSave() != null) {
+                        File saveFile = game.getSave();
+                        if (saveFile.exists()) {
+                            deleted = saveFile.delete();
+                        }
                     }
-                }
-                Alert info = new Alert(Alert.AlertType.INFORMATION);
-                if (deleted) {
-                    info.setTitle("Partida borrada");
-                    info.setHeaderText(null);
-                    info.setContentText("El archivo de guardado ha sido eliminado.");
+                    if (!deleted && game != null && game.getArchives() != null) {
+                        File arch = game.getArchives();
+                        if (arch.exists()) {
+                            deleted = arch.delete();
+                        }
+                    }
+
+                    if (deleted) {
+                        showBlackModal("Savefile Deleted Correctly", "Save File has been erased correctly", null);
+
+                        for (Node n : menuBox.getChildren()) {
+                            if (n instanceof Button) {
+                                Button b = (Button) n;
+                                if ("Continue".equals(b.getText())) {
+                                    b.setDisable(true);
+                                    b.setStyle("-fx-background-color: rgba(80,80,80,0.5); -fx-text-fill: rgba(200,200,200,0.7);");
+
+                                }
+                            }
+                        }
+                    } else {
+                        showBlackModal("Save could't be deleted.", "Savefile doesn't exists or couldn't be eliminated.", null);
+
+                    }
+
+                });
+
+                Button closeBtn = new Button("Close");
+                closeBtn.setMinWidth(120);
+                closeBtn.setOnAction(ev -> {
+                    FXGL.getGameScene().removeUINode(overlay);
+                    if (rootPane != null) {
+                        rootPane.setCursor(Cursor.NONE);
+                    }
+
+                    boolean saveExists = (game != null && game.getSave() != null && game.getSave().exists());
                     for (Node n : menuBox.getChildren()) {
                         if (n instanceof Button) {
                             Button b = (Button) n;
-                            if ("Continuar".equals(b.getText())) {
-                                b.setDisable(true);
-                                b.setStyle("-fx-background-color: rgba(80,80,80,0.5); -fx-text-fill: rgba(200,200,200,0.7);");
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    info.setTitle("No se borró la partida");
-                    info.setHeaderText(null);
-                    info.setContentText("No existe ningún archivo de guardado o no se pudo eliminar.");
-                }
-                info.showAndWait();
-            });
-            Button closeBtn = new Button("Cerrar");
-            closeBtn.setMinWidth(120);
-            closeBtn.setOnAction(ev -> {
-                FXGL.getGameScene().removeUINode(overlay);
-                if (rootPane != null) {
-                    rootPane.setCursor(Cursor.NONE);
-                }
-                for (Node n : menuBox.getChildren()) {
-                    if (n instanceof Button) {
-                        Button b = (Button) n;
-                        boolean saveExists = (game != null && game.getSave() != null && game.getSave().exists());
-                        if ("Continuar".equals(b.getText())) {
-                            b.setDisable(!saveExists);
-                            if (b.isDisable()) {
-                                b.setStyle("-fx-background-color: rgba(80,80,80,0.5); -fx-text-fill: rgba(200,200,200,0.7);");
+                            if ("Continue".equals(b.getText())) {
+                                b.setDisable(!saveExists);
+                                if (b.isDisable()) {
+                                    b.setStyle("-fx-background-color: rgba(80,80,80,0.5); -fx-text-fill: rgba(200,200,200,0.7);");
+                                } else {
+                                    b.setStyle("-fx-background-color: rgba(0,0,0,0.6); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
+                                }
                             } else {
-                                b.setStyle("-fx-background-color: rgba(0,0,0,0.6); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
+                                b.setDisable(false);
                             }
-                        } else {
-                            b.setDisable(false);
                         }
                     }
-                }
-                configOpen = false;
-                Platform.runLater(this::updateCursorSmooth);
-            });
-            javafx.scene.layout.HBox foot = new javafx.scene.layout.HBox(12, deleteBtn, closeBtn);
-            foot.setAlignment(Pos.CENTER);
-            content.getChildren().addAll(title, volLabel, volSlider, foot);
-            overlay.getChildren().add(content);
-            StackPane.setAlignment(content, Pos.CENTER);
-            overlay.addEventFilter(MouseEvent.MOUSE_PRESSED, ev -> {
-                if (ev.getTarget() == overlay) {
-                    ev.consume();
-                }
-            });
-            FXGL.getGameScene().addUINode(overlay);
-            overlay.requestFocus();
+
+                    configOpen = false;
+                    Platform.runLater(this::updateCursorSmooth);
+                });
+
+                javafx.scene.layout.HBox foot = new javafx.scene.layout.HBox(12, deleteBtn, closeBtn);
+                foot.setAlignment(Pos.CENTER);
+
+                content.getChildren().addAll(title, volLabel, volSlider, foot);
+                overlay.getChildren().add(content);
+                StackPane.setAlignment(content, Pos.CENTER);
+
+                overlay.addEventFilter(MouseEvent.MOUSE_PRESSED, ev -> {
+                    if (ev.getTarget() == overlay) {
+                        ev.consume();
+                    }
+                });
+
+                FXGL.getGameScene().addUINode(overlay);
+                overlay.requestFocus();
+            }
         });
     }
 
     private void startBackgroundMusic() {
+        boolean shouldStart = false;
+        URL res = null;
+
         try {
-            if (bgMusic != null) {
-                return;
+            shouldStart = (bgMusic == null);
+            if (shouldStart) {
+                res = getClass().getResource("/Resources/music/mainScreen.mp3");
+                shouldStart = (res != null);
             }
-            URL res = getClass().getResource("/Resources/music/mainScreen.mp3");
-            if (res == null) {
-                return;
+
+            if (shouldStart) {
+                Media media = new Media(res.toExternalForm());
+                MediaPlayer player = new MediaPlayer(media);
+                player.setCycleCount(MediaPlayer.INDEFINITE);
+                player.setVolume(volumeSetting);
+                player.play();
+                bgMusic = player;
             }
-            Media media = new Media(res.toExternalForm());
-            bgMusic = new MediaPlayer(media);
-            bgMusic.setCycleCount(MediaPlayer.INDEFINITE);
-            bgMusic.setVolume(volumeSetting);
-            bgMusic.play();
-        } catch (Throwable ignored) {
+        } catch (Exception ignored) {
         }
     }
 
     public static double getVolumeSetting() {
+        double volume = 0.7;
+
         try {
-            var app = FXGL.getApp();
+            Object app = FXGL.getApp();
             if (app instanceof MainScreen) {
-                return ((MainScreen) app).volumeSetting;
+                volume = ((MainScreen) app).volumeSetting;
             }
-        } catch (Throwable ignored) {
+        } catch (Exception ignored) {
         }
-        return 0.7;
+
+        return volume;
     }
 
     private void stopBackgroundMusic() {
@@ -519,88 +558,105 @@ public class MainScreen extends GameApplication {
     }
 
     private void activateSelected() {
-        if (configOpen) {
-            return;
-        }
-        String sel = labels[selectedIndex];
-        Node target = menuBox.getChildren().get(selectedIndex);
-        ScaleTransition st = new ScaleTransition(BUTTON_PING_DURATION, target);
-        st.setFromX(1.0);
-        st.setFromY(1.0);
-        st.setToX(1.12);
-        st.setToY(1.12);
-        st.setInterpolator(Interpolator.EASE_OUT);
-        st.setOnFinished(evt -> {
-            ScaleTransition stBack = new ScaleTransition(Duration.millis(120), target);
-            stBack.setFromX(1.12);
-            stBack.setFromY(1.12);
-            stBack.setToX(1.0);
-            stBack.setToY(1.0);
-            stBack.setInterpolator(Interpolator.EASE_IN);
-            stBack.play();
-        });
-        st.play();
-        switch (sel) {
-            case "Continuar":
-                if (game.getSave().exists()) {
-                    boolean correct = game.readSaveGame();
-                    a = new Alert(Alert.AlertType.INFORMATION);
-                    if (correct) {
-                        a.setHeaderText("Partida Iniciada");
-                        a.setTitle("Iniciada la partida correctamente");
-                        a.setContentText("La partida se ha cargado correctamente: " + game.getHero().getName());
-                        a.showAndWait();
-                        stopBackgroundMusic();
-                        showLoadingThenMap();
+        boolean proceed = true;
 
-                    } else {
-                        a.setAlertType(Alert.AlertType.ERROR);
-                        a.setTitle("No se pudo iniciar la partida");
-                        a.setHeaderText("Incorrecto");
-                        a.setContentText("Error ");
-                        a.showAndWait();
+        // Comprobar estado de configuración
+        if (configOpen) {
+            proceed = false;
+        }
+
+        // Comprobar índices y estructuras antes de ejecutar
+        if (proceed) {
+            if (labels == null || selectedIndex < 0 || selectedIndex >= labels.length) {
+                proceed = false;
+            }
+        }
+        if (proceed) {
+            if (menuBox == null || menuBox.getChildren().size() <= selectedIndex) {
+                proceed = false;
+            }
+        }
+
+        if (proceed) {
+            String sel = labels[selectedIndex];
+            Node target = menuBox.getChildren().get(selectedIndex);
+
+            // Animación de "ping"
+            ScaleTransition st = new ScaleTransition(BUTTON_PING_DURATION, target);
+            st.setFromX(1.0);
+            st.setFromY(1.0);
+            st.setToX(1.12);
+            st.setToY(1.12);
+            st.setInterpolator(Interpolator.EASE_OUT);
+            st.setOnFinished(evt -> {
+                ScaleTransition stBack = new ScaleTransition(Duration.millis(120), target);
+                stBack.setFromX(1.12);
+                stBack.setFromY(1.12);
+                stBack.setToX(1.0);
+                stBack.setToY(1.0);
+                stBack.setInterpolator(Interpolator.EASE_IN);
+                stBack.play();
+            });
+            st.play();
+
+            // Lógica de selección
+            switch (sel) {
+                case "Continue":
+                    if (game != null && game.getSave() != null && game.getSave().exists()) {
+                        boolean correct = game.readSaveGame();
+
+                        if (correct) {
+                            String heroName = game.getHero().getName();
+                            showBlackModal("The game has started Correctly", "Your save file has loaded correctly: " + heroName, () -> {
+                                stopBackgroundMusic();
+                                showLoadingThenMap();
+                            });
+                        } else {
+                            showBlackModal("Loading Error", "An unexpected Error has occured please create a new save file.", null);
+                        }
                     }
-                }
-                break;
-            case "Nueva Partida":
-                String name = showNewGameDialog();
-                if (name != null) {
-                    game.createHero(name);
-                    boolean cor = game.createSaveGame();
-                    a = new Alert(Alert.AlertType.INFORMATION);
-                    if (cor) {
-                        a.setHeaderText("Partida Creada");
-                        a.setTitle("Creada la partida correctamente");
-                        a.setContentText("Creada la partida con nombre: " + name);
-                        a.showAndWait();
-                        for (Node n : menuBox.getChildren()) {
-                            if (n instanceof Button) {
-                                Button b = (Button) n;
-                                if ("Continuar".equals(b.getText())) {
-                                    b.setDisable(false);
-                                    b.setStyle("-fx-background-color: rgba(0,0,0,0.6); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
+                    break;
+
+                case "New Game":
+                    String name = showNewGameDialog();
+                    if (name != null) {
+                        if (game != null) {
+                            game.createHero(name);
+                            boolean cor = game.createSaveGame();
+
+                            if (cor) {
+                                showBlackModal("Savefile created!", "The savefile has been created. You can start the game! " + "Enjoy, " + name, null);
+
+                                for (Node n : menuBox.getChildren()) {
+                                    if (n instanceof Button) {
+                                        Button b = (Button) n;
+                                        if ("Continue".equals(b.getText())) {
+                                            b.setDisable(false);
+                                            b.setStyle("-fx-background-color: rgba(0,0,0,0.6); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
+                                        }
+                                    }
                                 }
+                                updateCursorSmooth();
+                            } else {
+                                showBlackModal("Savefile was not created!", "The savefile could not be created", null);
+                               
                             }
                         }
-                        updateCursorSmooth();
-                    } else {
-                        a.setAlertType(Alert.AlertType.ERROR);
-                        a.setTitle("No se pudo crear la partida");
-                        a.setHeaderText("Incorrecto");
-                        a.setContentText("Error ");
-                        a.showAndWait();
                     }
-                }
-                break;
-            case "Configuración":
-                showConfigScreen();
-                break;
-            case "Salir":
-                stopBackgroundMusic();
-                Platform.runLater(() -> Platform.exit());
-                break;
-            default:
-                break;
+                    break;
+
+                case "Settings":
+                    showConfigScreen();
+                    break;
+
+                case "Quit":
+                    stopBackgroundMusic();
+                    Platform.runLater(Platform::exit);
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 
@@ -608,7 +664,7 @@ public class MainScreen extends GameApplication {
         StackPane overlay = new StackPane();
         overlay.setStyle("-fx-background-color: rgba(0,0,0,0.8);");
         overlay.setPrefSize(800, 600);
-        Label label = new Label("Cargando mapa...");
+        Label label = new Label("Loading Game..");
         label.setTextFill(Color.WHITE);
         label.setFont(Font.font(18));
         javafx.scene.shape.Rectangle progBg = new javafx.scene.shape.Rectangle(320, 12, Color.rgb(255, 255, 255, 0.12));
@@ -814,6 +870,83 @@ public class MainScreen extends GameApplication {
 
     public static boolean isModalOpen() {
         return modalOpen;
+    }
+
+    private void showBlackModal(String titleText, String messageText, Runnable onConfirm) {
+        Platform.runLater(() -> {
+            if (modalOpen) {
+                return;
+            }
+            modalOpen = true;
+
+            StackPane overlay = new StackPane();
+            overlay.setStyle("-fx-background-color: rgba(0,0,0,0.75);");
+            overlay.setPrefSize(800, 600);
+            overlay.setCursor(Cursor.DEFAULT);
+
+            // Contenedor central (cartel)
+            VBox card = new VBox(14);
+            card.setAlignment(Pos.CENTER);
+            card.setPadding(new Insets(18));
+            card.setMaxWidth(420);
+            card.setStyle("-fx-background-color: #0b0b0b; -fx-background-radius: 10; -fx-border-color: #FFD54F; -fx-border-radius: 10; -fx-border-width: 2;");
+
+            Label title = new Label(titleText);
+            title.setFont(Font.font("System", FontWeight.BOLD, 20));
+            title.setTextFill(Color.web("#FFD54F"));
+
+            Text message = new Text(messageText);
+            message.setFill(Color.WHITE);
+            message.setWrappingWidth(360);
+            message.setFont(Font.font(14));
+
+            Button ok = new Button("OK");
+            ok.setMinWidth(120);
+            ok.setStyle("-fx-background-color: linear-gradient(#FFD54F,#FFC107); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 6;");
+            ok.setOnAction(e -> {
+                // animación de salida
+                FadeTransition ft = new FadeTransition(Duration.millis(180), overlay);
+                ft.setFromValue(1);
+                ft.setToValue(0);
+                ft.setOnFinished(ev -> {
+                    FXGL.getGameScene().removeUINode(overlay);
+                    modalOpen = false;
+                    if (rootPane != null) {
+                        rootPane.setCursor(Cursor.NONE);
+                    }
+                    if (onConfirm != null) {
+                        onConfirm.run();
+                    }
+                });
+                ft.play();
+            });
+
+            card.getChildren().addAll(title, message, ok);
+            overlay.getChildren().add(card);
+            StackPane.setAlignment(card, Pos.CENTER);
+
+            overlay.setOnKeyPressed((KeyEvent ke) -> {
+                if (ke.getCode() == KeyCode.ENTER) {
+                    ok.fire();
+                    ke.consume();
+                }
+            });
+
+            overlay.addEventFilter(MouseEvent.MOUSE_PRESSED, ev -> {
+                if (ev.getTarget() == overlay) {
+                    ev.consume();
+                }
+            });
+
+            overlay.setOpacity(0);
+            FXGL.getGameScene().addUINode(overlay);
+            overlay.requestFocus();
+
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(180), overlay);
+            fadeIn.setFromValue(0);
+            fadeIn.setToValue(1);
+            fadeIn.play();
+        });
     }
 
     public static void main(String[] args) {

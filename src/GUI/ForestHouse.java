@@ -208,7 +208,7 @@ public class ForestHouse {
         Rectangle bg = new Rectangle(VIEW_W, VIEW_H);
         bg.setFill(Color.rgb(0, 0, 0, 0.6));
 
-        Text label = new Text("Cargando aldea...");
+        Text label = new Text("Loading Map..");
         label.setStyle("-fx-font-size: 24px; -fx-fill: #e0d090;");
 
         overlay.getChildren().addAll(bg, label);
@@ -234,52 +234,64 @@ public class ForestHouse {
     }
 
     private boolean loadBackgroundImage(String path) {
+        boolean loaded = false;
         try {
-            Image img = new Image(getClass().getResourceAsStream(path));
-            backgroundView = new ImageView(img);
-            backgroundView.setPreserveRatio(false);
-            backgroundView.setSmooth(true);
+            java.io.InputStream is = getClass().getResourceAsStream(path);
+            if (is != null) {
+                Image img = new Image(is);
+                backgroundView = new ImageView(img);
+                backgroundView.setPreserveRatio(false);
+                backgroundView.setSmooth(true);
 
-            worldW = img.getWidth() > 0 ? img.getWidth() : VIEW_W;
-            worldH = img.getHeight() > 0 ? img.getHeight() : VIEW_H;
+                worldW = img.getWidth() > 0 ? img.getWidth() : VIEW_W;
+                worldH = img.getHeight() > 0 ? img.getHeight() : VIEW_H;
 
-            backgroundView.setFitWidth(worldW);
-            backgroundView.setFitHeight(worldH);
+                backgroundView.setFitWidth(worldW);
+                backgroundView.setFitHeight(worldH);
 
-            world.setPrefSize(worldW, worldH);
-            world.getChildren().clear();
-            world.getChildren().add(backgroundView);
+                world.setPrefSize(worldW, worldH);
+                world.getChildren().clear();
+                world.getChildren().add(backgroundView);
 
-            if (!world.getChildren().contains(heroView)) {
-                world.getChildren().add(heroView);
+                if (!world.getChildren().contains(heroView)) {
+                    world.getChildren().add(heroView);
+                } else {
+                    heroView.toFront();
+                }
+                loaded = true;
             } else {
-                heroView.toFront();
+                Text err = new Text("No se encontró la imagen de la aldea: " + path);
+                err.setStyle("-fx-font-size: 16px; -fx-fill: #ffdddd;");
+                root.getChildren().add(err);
             }
-            return true;
         } catch (Throwable t) {
             Text err = new Text("No se pudo cargar la imagen de la aldea.");
             err.setStyle("-fx-font-size: 16px; -fx-fill: #ffdddd;");
             root.getChildren().add(err);
-            return false;
         }
+        return loaded;
     }
 
     private boolean startVillageMusic(String path) {
+        boolean started = false;
         try {
             URL res = getClass().getResource(path);
-            if (res == null) {
-                return false;
+            if (res != null) {
+                Media media = new Media(res.toExternalForm());
+                stopVillageMusic();
+                music = new MediaPlayer(media);
+                music.setCycleCount(MediaPlayer.INDEFINITE);
+                music.setVolume(MainScreen.getVolumeSetting());
+                music.play();
+                started = true;
+            } else {
+                System.err.println("No se encontró el recurso de música: " + path);
             }
-            Media media = new Media(res.toExternalForm());
-            stopVillageMusic();
-            music = new MediaPlayer(media);
-            music.setCycleCount(MediaPlayer.INDEFINITE);
-            music.setVolume(MainScreen.getVolumeSetting());
-            music.play();
-            return true;
         } catch (Throwable t) {
-            return false;
+            System.err.println("Error al iniciar música: " + t.getMessage());
+            started = false;
         }
+        return started;
     }
 
     private ImageView createHeroView() {
@@ -777,10 +789,12 @@ public class ForestHouse {
                         hide();
                     }
                 } else {
+                    boolean tagFound = false;
+
                     for (Rectangle r : transitionRects) {
-                        if (heroView.getBoundsInParent().intersects(r.getBoundsInParent())) {
+                        if (!tagFound && heroView.getBoundsInParent().intersects(r.getBoundsInParent())) {
                             foundTag = (String) r.getProperties().get("tag");
-                            break; // salimos del bucle
+                            tagFound = true;
                         }
                     }
 
@@ -805,52 +819,6 @@ public class ForestHouse {
                             floor2Into(entrance2floor);
                         }
                     }
-                }
-            }
-            if (k == KeyCode.ESCAPE) {
-                clearInputState();
-
-                Alert dlg = new Alert(Alert.AlertType.CONFIRMATION);
-                dlg.setTitle("Volver al menú");
-                dlg.setHeaderText("¿Quieres volver al menú principal?");
-                dlg.setContentText("Si vuelves al menú, la partida seguirá guardada en disco.");
-                try {
-                    if (root.getScene() != null && root.getScene().getWindow() != null) {
-                        dlg.initOwner(root.getScene().getWindow());
-                    }
-                } catch (Throwable ignored) {
-                }
-                dlg.setOnHidden(eh -> {
-                    clearInputState();
-                    Platform.runLater(root::requestFocus);
-                });
-
-                Optional<ButtonType> opt = dlg.showAndWait();
-                boolean ok = opt.isPresent() && opt.get() == ButtonType.OK;
-                if (ok) {
-                    try {
-                        if (game != null && game.getHero() != null) {
-                            Hero h = game.getHero();
-                            h.setLastLocation(Hero.Location.FOREST_HOUSE);
-                            h.setLastPosY(heroView.getLayoutY());
-                            h.setLastPosX(heroView.getLayoutX());
-                            try {
-                                game.createSaveGame();
-                            } catch (Throwable ignored) {
-                            }
-                        }
-                    } catch (Throwable ignored) {
-                    }
-
-                    stopVillageMusic();
-                    try {
-                        FXGL.getGameScene().removeUINode(root);
-                    } catch (Throwable ignored) {
-                    }
-                    MainScreen.restoreMenuAndMusic();
-                } else {
-                    clearInputState();
-                    Platform.runLater(root::requestFocus);
                 }
             }
 
@@ -887,7 +855,6 @@ public class ForestHouse {
     private void openInventory() {
         stopMover();
 
-        // Pausar música localmente
         try {
             if (music != null) {
                 music.pause();
@@ -895,7 +862,6 @@ public class ForestHouse {
         } catch (Throwable ignored) {
         }
 
-        // Pasar referencia para que InventoryScreen pueda guardar la posición y reanudar foco
         inventory = new InventoryScreen(game, this);
 
         inventory.setOnClose(() -> {
@@ -936,12 +902,15 @@ public class ForestHouse {
                 double dt = (now - last) / 1e9;
                 last = now;
 
+                boolean shouldProcess = true;
                 if (root.getScene() == null || !root.isFocused()) {
                     clearInputState();
-                    return;
+                    shouldProcess = false;
                 }
 
-                updateAndMove(dt);
+                if (shouldProcess) {
+                    updateAndMove(dt);
+                }
             }
         };
     }
@@ -949,6 +918,7 @@ public class ForestHouse {
     private void updateAndMove(double dt) {
         double vx = 0;
         double vy = 0;
+
         if (keys.contains(KeyCode.A)) {
             vx -= HERO_SPEED;
         }
@@ -963,16 +933,16 @@ public class ForestHouse {
         }
 
         ForestHouse.Direction newDir = (vx != 0 || vy != 0)
-                ? directionFromVector(vx, vy) : ForestHouse.Direction.NONE;
+                ? directionFromVector(vx, vy)
+                : ForestHouse.Direction.NONE;
         setDirectionIfChanged(newDir);
 
-        if (vx == 0 && vy == 0) {
+        boolean isIdle = (vx == 0 && vy == 0);
+        if (isIdle) {
             checkStartIntersection();
-
-            return;
+        } else {
+            moveHero(vx * dt, vy * dt);
         }
-
-        moveHero(vx * dt, vy * dt);
     }
 
     private void moveHero(double dx, double dy) {
@@ -986,9 +956,8 @@ public class ForestHouse {
         boolean collision = false;
 
         for (ForestHouse.Obstacle ob : obstacles) {
-            if (heroRect.intersects(ob.collisionRect)) {
+            if (!collision && heroRect.intersects(ob.collisionRect)) {
                 collision = true;
-                break;
             }
         }
 
@@ -1024,39 +993,34 @@ public class ForestHouse {
     }
 
     private ForestHouse.Direction directionFromVector(double vx, double vy) {
-        if (vx == 0 && vy == 0) {
-            return ForestHouse.Direction.NONE;
-        }
-        double angle = Math.toDegrees(Math.atan2(-vy, vx));
-        if (angle < 0) {
-            angle += 360.0;
+        ForestHouse.Direction result = ForestHouse.Direction.NONE;
+
+        if (!(vx == 0 && vy == 0)) {
+            double angle = Math.toDegrees(Math.atan2(-vy, vx));
+            if (angle < 0) {
+                angle += 360.0;
+            }
+
+            if (angle >= 337.5 || angle < 22.5) {
+                result = ForestHouse.Direction.E;
+            } else if (angle < 67.5) {
+                result = ForestHouse.Direction.NE;
+            } else if (angle < 112.5) {
+                result = ForestHouse.Direction.N;
+            } else if (angle < 157.5) {
+                result = ForestHouse.Direction.NW;
+            } else if (angle < 202.5) {
+                result = ForestHouse.Direction.W;
+            } else if (angle < 247.5) {
+                result = ForestHouse.Direction.SW;
+            } else if (angle < 292.5) {
+                result = ForestHouse.Direction.S;
+            } else if (angle < 337.5) {
+                result = ForestHouse.Direction.SE;
+            }
         }
 
-        if (angle >= 337.5 || angle < 22.5) {
-            return ForestHouse.Direction.E;
-        }
-        if (angle < 67.5) {
-            return ForestHouse.Direction.NE;
-        }
-        if (angle < 112.5) {
-            return ForestHouse.Direction.N;
-        }
-        if (angle < 157.5) {
-            return ForestHouse.Direction.NW;
-        }
-        if (angle < 202.5) {
-            return ForestHouse.Direction.W;
-        }
-        if (angle < 247.5) {
-            return ForestHouse.Direction.SW;
-        }
-        if (angle < 292.5) {
-            return ForestHouse.Direction.S;
-        }
-        if (angle < 337.5) {
-            return ForestHouse.Direction.SE;
-        }
-        return ForestHouse.Direction.NONE;
+        return result;
     }
 
     private void setDirectionIfChanged(ForestHouse.Direction newDir) {
@@ -1071,13 +1035,16 @@ public class ForestHouse {
     }
 
     private void checkStartIntersection() {
-        if (startRect == null) {
-            onStartRect = false;
-            return;
+        boolean intersects = false;
+
+        if (startRect != null) {
+            intersects = heroView.getBoundsInParent().intersects(startRect.getBoundsInParent());
+            startRect.setFill(intersects
+                    ? Color.rgb(0, 120, 255, 0.42)
+                    : Color.rgb(0, 120, 255, 0.28));
         }
-        boolean intersects = heroView.getBoundsInParent().intersects(startRect.getBoundsInParent());
+
         onStartRect = intersects;
-        startRect.setFill(intersects ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
     }
 
     private void updateCamera() {
@@ -1107,34 +1074,35 @@ public class ForestHouse {
     }
 
     private static double clamp(double v, double lo, double hi) {
-        if (v < lo) {
-            return lo;
+        double result = v;
+
+        if (result < lo) {
+            result = lo;
+        } else if (result > hi) {
+            result = hi;
         }
-        if (v > hi) {
-            return hi;
-        }
-        return v;
+
+        return result;
     }
 
     private void clearInputState() {
         keys.clear();
     }
-    //---Metodo para cambiar el fondo la musica y las colisiones,y todo dentro del 1er piso-----
 
     private void intoHouse(boolean entranceHouse) {
         transitionRects.clear();
-        obstacles.clear(); //limpiando coaliciones
+        obstacles.clear();
         colissionInSide();
         startRect = null;
 
-        loadBackgroundImage("/Resources/textures/forestHouse/1stFloorForestHouse.png");// cambiando fondo
+        loadBackgroundImage("/Resources/textures/forestHouse/1stFloorForestHouse.png");
 
         stopVillageMusic();
 
-        startVillageMusic("/Resources/music/interiorOST.mp3");//camniar musica
+        startVillageMusic("/Resources/music/interiorOST.mp3");
         createTransitionRects();
         if (entranceHouse) {
-            setHeroPosition(411.0, 576.0); //poisiconar heroe
+            setHeroPosition(411.0, 576.0);
         } else {
             setHeroPosition(40, 0);
         }
@@ -1146,11 +1114,11 @@ public class ForestHouse {
         populateForestHouseObstacles();
         createStartRectAtHeroStart();
 
-        loadBackgroundImage("/Resources/textures/forestHouse/forestHouseOutside2.png");// cambiando fondo
+        loadBackgroundImage("/Resources/textures/forestHouse/forestHouseOutside2.png");
 
         stopVillageMusic();
 
-        startVillageMusic("/Resources/music/forestHouse.mp3");//camniar musica
+        startVillageMusic("/Resources/music/forestHouse.mp3");
         createTransitionRects();
 
         setHeroPosition(379.0, 410);
@@ -1164,13 +1132,13 @@ public class ForestHouse {
         String rect = "house_exit";
         int pos;
 
-        loadBackgroundImage("/Resources/textures/forestHouse/2ndFloorForestHousePassage.png");// cambiando fondo
+        loadBackgroundImage("/Resources/textures/forestHouse/2ndFloorForestHousePassage.png");
         createTransitionRects();
 
         pos = PostInArray(rect);
         transitionRects.remove(pos);
         if (entrance2floor) {
-            setHeroPosition(0, 530.0); //poisiconar heroe 
+            setHeroPosition(0, 530.0);
         } else {
             setHeroPosition(330, 71.0);
         }
@@ -1188,7 +1156,7 @@ public class ForestHouse {
         pos = PostInArray(rect);
         transitionRects.remove(pos);
 
-        setHeroPosition(915.65, 1152.0); //poisiconar heroe   
+        setHeroPosition(915.65, 1152.0);
     }
 
     private void intoSwamp() {
@@ -1199,12 +1167,11 @@ public class ForestHouse {
         swampScene.showWithLoading(() -> {
             System.out.println("Swamp cargado correctamente");
         }, () -> {
-            // al salir del Swamp: volver a la casa
+
             showWithLoading(null, onExitCallback);
         });
     }
 
-    // Crea todos los triggers de entrada/salida para ForestHouse
     private void createTransitionRects() {
         transitionRects.clear();
 
@@ -1243,9 +1210,8 @@ public class ForestHouse {
         swampEntrance.getProperties().put("tag", "swamp_entrance");
         transitionRects.add(swampEntrance);
 
-        // Configuración visual (invisibles pero útiles para depuración)
         for (Rectangle r : transitionRects) {
-            r.setFill(Color.color(0, 0, 0, 0.0)); // invisible
+            r.setFill(Color.color(0, 0, 0, 0.0));
             r.setStroke(null);
             r.setMouseTransparent(true);
             world.getChildren().add(r);
@@ -1254,7 +1220,6 @@ public class ForestHouse {
         heroView.toFront();
     }
 
-    //metodo para buscarPosicion del rectangulo a borrar
     private int PostInArray(String rect) {
         int pos = -1;
         int i = 0;

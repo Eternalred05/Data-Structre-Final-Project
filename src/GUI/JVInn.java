@@ -2,6 +2,8 @@ package GUI;
 
 import Runner.MainScreen;
 import Characters.Hero;
+import Characters.NPC;
+import Characters.Villager;
 import Logic.Game;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.FadeTransition;
@@ -32,6 +34,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import javafx.animation.TranslateTransition;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 public class JVInn {
 
@@ -62,6 +72,11 @@ public class JVInn {
     // Sistema de colisiones
     private final List<Obstacle> obstacles = new ArrayList<>();
     private boolean debugEnabled = false;
+    
+    // para los NPC
+    private final List<NPC> npcs = new ArrayList<>();
+    private final List<ImageView> npcNodes = new ArrayList<>();
+    private final List<Rectangle2D> npcCollisionRects = new ArrayList<>();
 
     // Inventario (si se abre desde aquí se pasa this)
     private InventoryScreen inventory;
@@ -74,7 +89,7 @@ public class JVInn {
 
     // Tipos de obstáculos para la aldea
     private enum ObstacleType {
-        HOUSE, TREE, WELL, FENCE, BUSH, EXIT, BLOCK
+        HOUSE, TREE, WELL, FENCE, BUSH, EXIT, BLOCK, NPC
     }
 
     // Clase interna para obstáculos
@@ -135,6 +150,11 @@ public class JVInn {
 
             // Primero poblar colisiones
             populateVillageObstacles();
+            
+            //
+             // Cargar NPC
+            addVillagerToList();
+            renderNpcs();
 
             // Luego posicionar al héroe
             positionHeroAtEntrance();
@@ -800,6 +820,340 @@ public class JVInn {
             startRect.setFill(onExitArea
                     ? Color.rgb(255, 120, 0, 0.42)
                     : Color.rgb(0, 120, 255, 0.28));
+        }
+    }
+
+    // Para los Dialogos
+    private void addVillagerToList() {
+        double x;
+        double y;
+        x = 480.6044819999995;
+        y = 564.4142460000003;
+        addNpc(game.getCharacters().get(26), 463.021721999999, 547.2334619999993);// Morty 1
+        obstacles.add(new JVInn.Obstacle(
+                new Rectangle2D(x, y, 24, 24),
+                JVInn.ObstacleType.NPC,
+                "Morty"
+        ));
+        addNpc(game.getCharacters().get(28), 860.430275999998939, 226.9060919999997);// Cat 1
+        x = 874.659689999999;
+        y = 250.58789999999973;
+        obstacles.add(new JVInn.Obstacle(
+                new Rectangle2D(x, y, 24, 24),
+                JVInn.ObstacleType.NPC,
+                "Cat1"
+        ));
+        addNpc(game.getCharacters().get(31), 141.29985599999966, 141.5015559999997);// Maya
+        x = 144.11312999999961;
+        y = 150.28780599999916;
+        obstacles.add(new JVInn.Obstacle(
+                new Rectangle2D(x, y, 24, 24),
+                JVInn.ObstacleType.NPC,
+                "Maya"
+        ));
+        addNpc(game.getCharacters().get(33), 1328.3121959999992, 691.752466);// Dog
+        x = 1339.178634;
+        y = 688.9790080000007;
+        obstacles.add(new JVInn.Obstacle(
+                new Rectangle2D(x, y, 24, 24),
+                JVInn.ObstacleType.NPC,
+                "Dog"
+        ));
+        addNpc(game.getCharacters().get(34), 691.6607640000009, 70.4151640000008);// Mural
+
+    }
+
+    public void addNpc(NPC npc, double x, double y) {
+        boolean shouldAdd = npc != null;
+
+        ImageView iv = null;
+        Rectangle2D rect = null;
+
+        if (shouldAdd) {
+
+            npcs.add(npc);
+            iv = new ImageView(npc.getSpritePath());
+            iv.setPreserveRatio(true);
+            iv.setFitWidth(60);
+            iv.setFitHeight(60);
+            iv.setMouseTransparent(true);
+            iv.setLayoutX(x);
+            iv.setLayoutY(y);
+
+            rect = new Rectangle2D(x, y, iv.getFitWidth(), iv.getFitHeight());
+
+            npcNodes.add(iv);
+            npcCollisionRects.add(rect);
+        }
+
+        if (shouldAdd) {
+            ImageView finalIv = iv;
+            Platform.runLater(() -> {
+                if (finalIv != null && !world.getChildren().contains(finalIv)) {
+                    world.getChildren().add(finalIv);
+                }
+                if (finalIv != null) {
+                    finalIv.toFront();
+                }
+                if (heroView != null) {
+                    heroView.toFront();
+                }
+            });
+        }
+    }
+
+    public Villager findNearbyVillager() {
+        Villager found = null;
+        Rectangle2D heroRect = new Rectangle2D(heroView.getLayoutX(), heroView.getLayoutY(), HERO_W, HERO_H);
+        for (int i = 0; i < npcCollisionRects.size(); i++) {
+            Rectangle2D nr = npcCollisionRects.get(i);
+            boolean intersects = heroRect.intersects(nr);
+            if (intersects) {
+                if (i >= 0 && i < npcs.size() && npcs.get(i) instanceof Villager) {
+                    found = (Villager) npcs.get(i);
+                }
+            }
+
+        }
+
+        return found;
+    }
+
+    public void renderNpcs() {
+        Platform.runLater(() -> {
+            // eliminar nodos antiguos si world fue limpiado
+            world.getChildren().removeIf(n -> npcNodes.contains(n));
+            for (int i = 0; i < npcNodes.size(); i++) {
+                ImageView iv = npcNodes.get(i);
+                Rectangle2D r = npcCollisionRects.get(i);
+                iv.setLayoutX(r.getMinX());
+                iv.setLayoutY(r.getMinY());
+                if (!world.getChildren().contains(iv)) {
+                    world.getChildren().add(iv);
+                }
+                iv.toFront();
+            }
+            heroView.toFront();
+        });
+    }
+
+    private void showBottomDialogRPG(String title, String message, String iconResourcePath) {
+        Platform.runLater(() -> {
+            boolean foundExisting = false;
+            StackPane existingOverlay = null;
+            Button existingOkBtn = null;
+
+            for (Node child : root.getChildren()) {
+                Object flag = child.getProperties().get("rpgDialog");
+                if (Boolean.TRUE.equals(flag) && child instanceof StackPane) {
+                    existingOverlay = (StackPane) child;
+                    Node db = existingOverlay.getChildren().isEmpty() ? null : existingOverlay.getChildren().get(0);
+                    if (db instanceof HBox) {
+                        HBox dialogBox = (HBox) db;
+                        for (Node n : dialogBox.getChildren()) {
+                            if (n instanceof VBox) {
+                                VBox texts = (VBox) n;
+                                if (texts.getChildren().size() >= 2 && texts.getChildren().get(1) instanceof Text) {
+                                    Text tMsg = (Text) texts.getChildren().get(1);
+                                    tMsg.setText(message);
+                                }
+                                if (texts.getChildren().size() >= 1 && texts.getChildren().get(0) instanceof Text) {
+                                    Text tTitle = (Text) texts.getChildren().get(0);
+                                    tTitle.setText(title);
+                                }
+                            }
+                            if (n instanceof Button) {
+                                existingOkBtn = (Button) n;
+                            }
+                        }
+                    }
+                    foundExisting = true;
+                }
+            }
+
+            if (foundExisting && existingOverlay != null) {
+                StackPane overlayRef = existingOverlay;
+                Button okRef = existingOkBtn;
+                Platform.runLater(() -> {
+                    overlayRef.requestFocus();
+                    if (okRef != null) {
+                        okRef.requestFocus();
+                    }
+                });
+            } else {
+                stopMover();
+                root.getProperties().put("dialogOpen", true);
+
+                StackPane modalOverlay = new StackPane();
+                modalOverlay.getProperties().put("rpgDialog", true);
+                modalOverlay.setPrefSize(VIEW_W, VIEW_H);
+                modalOverlay.setStyle("-fx-background-color: transparent;");
+                modalOverlay.setPickOnBounds(true);
+                modalOverlay.setFocusTraversable(true);
+
+                HBox dialogBox = new HBox(10);
+                dialogBox.setMinHeight(72);
+                dialogBox.setMaxHeight(140);
+                dialogBox.setMaxWidth(420);
+                dialogBox.setPrefWidth(420);
+                dialogBox.setStyle(
+                        "-fx-background-color: rgba(0,0,0,0.88);"
+                        + "-fx-padding: 10 12 10 12;"
+                        + "-fx-background-radius: 6;"
+                        + "-fx-border-radius: 6;"
+                        + "-fx-border-color: rgba(255,255,255,0.06);"
+                        + "-fx-border-width: 1;"
+                );
+                dialogBox.setEffect(new DropShadow(6, Color.rgb(0, 0, 0, 0.7)));
+                dialogBox.setAlignment(Pos.CENTER_LEFT);
+
+                ImageView iconView = null;
+                if (iconResourcePath != null) {
+                    try {
+                        Image icon = new Image(getClass().getResourceAsStream(iconResourcePath));
+                        iconView = new ImageView(icon);
+                        iconView.setFitWidth(44);
+                        iconView.setFitHeight(44);
+                        iconView.setPreserveRatio(true);
+                    } catch (Throwable ignored) {
+                        iconView = null;
+                    }
+                }
+
+                VBox texts = new VBox(3);
+                Text tTitle = new Text(title);
+                tTitle.setStyle("-fx-font-size: 13px; -fx-fill: #f5f5f5; -fx-font-weight: 700;");
+                Text tMsg = new Text(message);
+                tMsg.setWrappingWidth(420 - 140);
+                tMsg.setStyle("-fx-font-size: 12px; -fx-fill: #e6e6e6;");
+                texts.getChildren().addAll(tTitle, tMsg);
+
+                Button okBtn = new Button("Ok");
+                okBtn.setDefaultButton(true);
+                okBtn.setStyle(
+                        "-fx-background-color: linear-gradient(#444444, #222222);"
+                        + "-fx-text-fill: #ffffff;"
+                        + "-fx-font-weight: 600;"
+                        + "-fx-background-radius: 6;"
+                        + "-fx-padding: 6 10 6 10;"
+                );
+                okBtn.setOnAction(e -> fadeOutAndRemove(modalOverlay));
+
+                if (iconView != null) {
+                    dialogBox.getChildren().addAll(iconView, texts, okBtn);
+                } else {
+                    dialogBox.getChildren().addAll(texts, okBtn);
+                }
+
+                StackPane.setAlignment(dialogBox, Pos.BOTTOM_CENTER);
+                StackPane.setMargin(dialogBox, new Insets(0, 20, 12, 20));
+                modalOverlay.getChildren().add(dialogBox);
+
+                root.getChildren().add(modalOverlay);
+
+                modalOverlay.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, ev -> {
+                    Bounds b = dialogBox.localToScene(dialogBox.getBoundsInLocal());
+                    if (!b.contains(ev.getSceneX(), ev.getSceneY())) {
+                        ev.consume();
+                    }
+                });
+
+                TranslateTransition tt = new TranslateTransition(Duration.millis(220), dialogBox);
+                tt.setFromY(28);
+                tt.setToY(0);
+                tt.play();
+
+                FadeTransition ftIn = new FadeTransition(Duration.millis(160), dialogBox);
+                ftIn.setFromValue(0.0);
+                ftIn.setToValue(1.0);
+                ftIn.play();
+
+                Platform.runLater(() -> {
+                    modalOverlay.requestFocus();
+                    okBtn.requestFocus();
+                });
+
+                Platform.runLater(() -> {
+                    javafx.scene.Scene scene = root.getScene();
+                    if (scene != null) {
+                        javafx.event.EventHandler<KeyEvent> sceneHandler = ev -> {
+                            if (Boolean.TRUE.equals(root.getProperties().get("dialogOpen"))) {
+                                if (ev.getCode() == KeyCode.ENTER || ev.getCode() == KeyCode.ESCAPE) {
+                                    ev.consume();
+                                    Platform.runLater(() -> {
+                                        try {
+                                            okBtn.fire();
+                                        } catch (Throwable ignored) {
+                                        }
+                                    });
+                                } else {
+                                    ev.consume();
+                                }
+                            }
+                        };
+                        modalOverlay.getProperties().put("sceneKeyHandler", sceneHandler);
+                        scene.addEventFilter(KeyEvent.KEY_PRESSED, sceneHandler);
+                    }
+                });
+
+                modalOverlay.getProperties().put("onRemoved", (Runnable) () -> {
+                    startMover();
+                    root.getProperties().put("dialogOpen", false);
+                });
+            }
+        });
+    }
+
+    private void fadeOutAndRemove(StackPane modalOverlay) {
+        final Runnable[] resumeArr = new Runnable[1];
+        if (modalOverlay != null) {
+            Node dialogBox = modalOverlay.getChildren().isEmpty() ? null : modalOverlay.getChildren().get(0);
+            try {
+                Object o = modalOverlay.getProperties().get("onRemoved");
+                if (o instanceof Runnable) {
+                    resumeArr[0] = (Runnable) o;
+                }
+            } catch (Throwable ignored) {
+            }
+
+            try {
+                Object handlerObj = modalOverlay.getProperties().remove("sceneKeyHandler");
+                if (handlerObj instanceof javafx.event.EventHandler) {
+                    javafx.scene.Scene scene = root.getScene();
+                    if (scene != null) {
+                        @SuppressWarnings("unchecked")
+                        javafx.event.EventHandler<KeyEvent> h = (javafx.event.EventHandler<KeyEvent>) handlerObj;
+                        scene.removeEventFilter(KeyEvent.KEY_PRESSED, h);
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+
+            if (dialogBox != null) {
+                FadeTransition ftOut = new FadeTransition(Duration.millis(140), dialogBox);
+                ftOut.setFromValue(1.0);
+                ftOut.setToValue(0.0);
+                ftOut.setOnFinished(ev -> {
+                    root.getChildren().remove(modalOverlay);
+                    if (resumeArr[0] != null) {
+                        resumeArr[0].run();
+                    }
+                });
+                ftOut.play();
+            } else {
+                root.getChildren().remove(modalOverlay);
+                if (resumeArr[0] != null) {
+                    resumeArr[0].run();
+                }
+            }
+        } else {
+            try {
+                Object o = root.getProperties().get("onRemovedFallback");
+                if (o instanceof Runnable) {
+                    ((Runnable) o).run();
+                }
+            } catch (Throwable ignored) {
+            }
         }
     }
 
