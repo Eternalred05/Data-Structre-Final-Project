@@ -9,14 +9,16 @@ public abstract class Weapon extends Item implements Buyable {
     protected String effect;
     protected String type;
     protected int cost;
+    private int salePrice;
 
     public Weapon(String info, String name, String id, int attack, int lifeSpan,
-            String effect, int cost) {
+            String effect, int cost, int salePrice) {
         super(info, name, id);
         setAttack(attack);
         setLifeSpan(lifeSpan);
         setEffect(effect);
         setCost(cost);
+        setSalePrice(salePrice);
     }
 
     public void setCost(int cost) {
@@ -27,6 +29,15 @@ public abstract class Weapon extends Item implements Buyable {
         return cost;
     }
 
+    public int getSalePrice() {
+        return salePrice;
+    }
+
+    public void setSalePrice(int salePrice) {
+        this.salePrice = salePrice;
+    }
+    
+    
     public int getAttack() {
         return attack;
     }

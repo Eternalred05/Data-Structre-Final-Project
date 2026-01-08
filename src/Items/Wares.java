@@ -7,11 +7,13 @@ public class Wares extends Item implements Buyable {
 
     private int healing;
     private int cost;
+    private int salePrice;
     
-    public Wares(String info, String name, String id, int healing, int cost) {
+    public Wares(String info, String name, String id, int healing, int cost, int salePrice) {
         super(info, name, id);
         setHealing(healing);
         setCost(cost);
+        setSalePrice(salePrice);
     }
     
     public void setCost(int cost) {
@@ -21,6 +23,16 @@ public class Wares extends Item implements Buyable {
     public int getCost() {
         return cost;
     }
+
+    public int getSalePrice() {
+        return salePrice;
+    }
+
+    public void setSalePrice(int salePrice) {
+        this.salePrice = salePrice;
+    }
+
+   
     
     public int getHealing() {
         return healing;

@@ -4,7 +4,9 @@ import Runner.MainScreen;
 import Characters.Hero;
 import Characters.NPC;
 import Characters.Villager;
+import Items.*;
 import Logic.Game;
+import Utils.Buyable;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -29,13 +31,17 @@ import javafx.util.Duration;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import javafx.animation.SequentialTransition;
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -59,6 +65,13 @@ public class JVStore {
     private final double VIEW_H = 600;
     private double worldW = VIEW_W;
     private double worldH = VIEW_H;
+
+    private StackPane currentShopScreen = null;
+
+    private boolean onStoreTable = false;
+    private Rectangle2D storeTableRect;
+
+    private Text interactionHint = null;
 
     private Rectangle startRect;
     private boolean onStartRect = false;
@@ -145,7 +158,7 @@ public class JVStore {
             boolean imageOk = loadBackgroundImage("/Resources/textures/fieldVillage/FVStore.png");
             boolean musicOk = startVillageMusic("/Resources/music/interiorOST.mp3");
             // Primero poblar colisiones
-             populateVillageObstacles();
+            populateVillageObstacles();
 
             // Cargar NPC
             addVillagerToList();
@@ -331,6 +344,13 @@ public class JVStore {
                 "estanteLargo"
         ));
 
+        storeTableRect = new Rectangle2D(320, 200, 160, 50);
+        obstacles.add(new Obstacle(
+                storeTableRect,
+                ObstacleType.BLOCK,
+                "store_table"
+        ));
+
         obstacles.add(new Obstacle(
                 new Rectangle2D(0, 0, 840, 80),
                 ObstacleType.BLOCK,
@@ -372,6 +392,52 @@ public class JVStore {
                 ObstacleType.BLOCK,
                 "estatua"
         ));
+    }
+
+    private void checkStoreTableIntersection() {
+
+        double interactionMargin = 20.0;
+        Rectangle2D interactionRect = new Rectangle2D(
+                storeTableRect.getMinX() - interactionMargin,
+                storeTableRect.getMinY() - interactionMargin,
+                storeTableRect.getWidth() + (interactionMargin * 2),
+                storeTableRect.getHeight() + (interactionMargin * 2)
+        );
+
+        Rectangle2D heroRect = new Rectangle2D(
+                heroView.getLayoutX(),
+                heroView.getLayoutY(),
+                HERO_W,
+                HERO_H
+        );
+
+        onStoreTable = heroRect.intersects(interactionRect);
+
+        Platform.runLater(() -> {
+            if (onStoreTable) {
+                if (interactionHint == null) {
+                    interactionHint = new Text("Presiona ENTER para interactuar");
+                    interactionHint.setStyle("-fx-font-size: 16px; -fx-fill: #f1c40f; "
+                            + "-fx-font-weight: bold; -fx-effect: dropshadow(gaussian, black, 2, 0.5, 0, 0);");
+                    interactionHint.setLayoutX(heroView.getLayoutX() - 50);
+                    interactionHint.setLayoutY(heroView.getLayoutY() - 20);
+                    world.getChildren().add(interactionHint);
+                } else {
+                    // Actualizar posición del indicador
+                    interactionHint.setLayoutX(heroView.getLayoutX() - 50);
+                    interactionHint.setLayoutY(heroView.getLayoutY() - 20);
+                }
+            } else if (interactionHint != null) {
+                world.getChildren().remove(interactionHint);
+                interactionHint = null;
+            }
+        });
+
+        // Indicador visual de interacción
+        if (debugEnabled && onStoreTable) {
+            System.out.println("Presiona ENTER para interactuar");
+        }
+
     }
 
     private void drawDebugObstacles() {
@@ -520,6 +586,45 @@ public class JVStore {
                 }
             }
 
+            if (k == KeyCode.ENTER) {
+                // Primero verificar si estamos en la mesa de la tienda
+                if (onStoreTable) {
+                    // Verificar si la tienda ya está abierta
+                    if (currentShopScreen != null && root.getChildren().contains(currentShopScreen)) {
+                        // Ya está abierta, enfocar
+                        currentShopScreen.requestFocus();
+                    } else {
+                        // Abrir tienda
+                        clearInputState();
+                        openShopMenu();
+                    }
+                    ev.consume();
+                    return;
+                }
+                if (onStartRect) {
+                    clearInputState();
+                    try {
+                        if (game != null && game.getHero() != null) {
+                            Hero h = game.getHero();
+                            h.setLastLocation(Hero.Location.FIELD_VILLAGE);
+                            h.setLastPosX(heroView.getLayoutX());
+                            h.setLastPosY(heroView.getLayoutY());
+                            try {
+                                game.createSaveGame();
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                    if (onExitCallback != null) {
+                        hide();
+                        onExitCallback.run();
+                    } else {
+                        hide();
+                    }
+                }
+            }
+
             ev.consume();
         });
 
@@ -590,6 +695,616 @@ public class JVStore {
         });
     }
 
+    /**
+     * Abre el menú principal de la tienda
+     */
+    private void openShopMenu() {
+        stopMover();
+
+        // SIEMPRE recrear el menú principal para valores actualizados
+        StackPane newScreen = createMainMenu();
+
+        // Mostrar pantalla (reemplaza cualquier pantalla existente)
+        showShopScreen(newScreen);
+
+        // Enfocar
+        newScreen.requestFocus();
+    }
+
+    /**
+     * Crea un botón estilizado para el menú de la tienda
+     */
+    private Button createShopButton(String text, String color) {
+        Button button = new Button(text);
+        button.setPrefSize(200, 50);
+        button.setStyle("-fx-background-color: " + color + "; "
+                + "-fx-text-fill: white; "
+                + "-fx-font-size: 16px; "
+                + "-fx-font-weight: bold; "
+                + "-fx-background-radius: 5; "
+                + "-fx-cursor: hand;");
+
+        // Efecto hover
+        button.setOnMouseEntered(e -> {
+            button.setStyle("-fx-background-color: derive(" + color + ", 20%); "
+                    + "-fx-text-fill: white; "
+                    + "-fx-font-size: 16px; "
+                    + "-fx-font-weight: bold; "
+                    + "-fx-background-radius: 5; "
+                    + "-fx-cursor: hand;");
+        });
+
+        button.setOnMouseExited(e -> {
+            button.setStyle("-fx-background-color: " + color + "; "
+                    + "-fx-text-fill: white; "
+                    + "-fx-font-size: 16px; "
+                    + "-fx-font-weight: bold; "
+                    + "-fx-background-radius: 5; "
+                    + "-fx-cursor: hand;");
+        });
+
+        return button;
+    }
+
+    /**
+     * Muestra una nueva pantalla de la tienda
+     */
+    private void showShopScreen(StackPane screen) {
+        Platform.runLater(() -> {
+            try {
+                // Verificar si ya es la pantalla actual
+                if (currentShopScreen == screen) {
+                    // Solo asegurar que esté al frente
+                    if (root.getChildren().contains(screen)) {
+                        screen.toFront();
+                    } else {
+                        // Extraño caso: referencia pero no en root
+                        root.getChildren().add(screen);
+                        screen.toFront();
+                    }
+                    return;
+                }
+
+                // Remover pantalla anterior si existe
+                if (currentShopScreen != null) {
+                    try {
+                        root.getChildren().remove(currentShopScreen);
+                    } catch (Exception e) {
+                        // Ignorar si ya fue removido
+                    }
+                }
+
+                // Asegurar que la nueva pantalla no esté ya en root
+                try {
+                    root.getChildren().remove(screen);
+                } catch (Exception e) {
+                    // Ignorar si no estaba
+                }
+
+                // Agregar nueva pantalla
+                root.getChildren().add(screen);
+                currentShopScreen = screen;
+                screen.toFront();
+
+            } catch (Exception e) {
+                System.err.println("Error en showShopScreen: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * Cierra el menú de la tienda
+     */
+    private void closeShopInterface() {
+        // Limpiar todo
+        if (currentShopScreen != null) {
+            root.getChildren().remove(currentShopScreen);
+            currentShopScreen = null;
+        }
+
+        // Reanudar juego
+        startMover();
+        root.requestFocus();
+    }
+
+    /**
+     * Abre la pantalla de compra
+     */
+    private void openBuyScreen() {
+        // Crear pantalla de compra
+        StackPane newScreen = createBuyScreen();
+
+        // Mostrar pantalla
+        showShopScreen(newScreen);
+    }
+
+    /**
+     * Abre pantalla de venta (desde menú principal)
+     */
+    private void openSellScreen() {
+        // Crear pantalla de venta
+        StackPane newScreen = createSellScreen();
+
+        // Mostrar pantalla
+        showShopScreen(newScreen);
+    }
+
+    /**
+     * Crea una fila para un item en la pantalla de compra
+     */
+    private HBox createBuyItemRow(Item item) {
+        HBox row = new HBox(15);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setStyle("-fx-background-color: #2c3e50; "
+                + "-fx-background-radius: 5; "
+                + "-fx-padding: 10; "
+                + "-fx-border-color: #34495e; "
+                + "-fx-border-width: 1;");
+
+        // Nombre del item
+        Label nameLabel = new Label(item.getName());
+        nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #ecf0f1;");
+        nameLabel.setPrefWidth(150);
+
+        // Descripción
+        Label descLabel = new Label(item.getInfo());
+        descLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #bdc3c7;");
+        descLabel.setWrapText(true);
+        descLabel.setPrefWidth(250);
+
+        // Precio
+        int cost = 0;
+        String type = "";
+        if (item instanceof Weapon) {
+            cost = ((Weapon) item).getCost();
+            type = "Weapon (Attack: " + ((Weapon) item).getAttack() + ")";
+        } else if (item instanceof Armor) {
+            cost = ((Armor) item).getCost();
+            type = "Armor (Defense: " + ((Armor) item).getDefense() + ")";
+        } else if (item instanceof Wares) {
+            cost = ((Wares) item).getCost();
+            type = "Consumable (Healing: " + ((Wares) item).getHealing() + ")";
+        }
+
+        Label typeLabel = new Label(type);
+        typeLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #3498db;");
+
+        Label priceLabel = new Label("Cost: " + cost + " coins");
+        priceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #f1c40f;");
+
+        // Botón de comprar
+        Button buyButton = new Button("BUY");
+        buyButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; "
+                + "-fx-font-weight: bold; -fx-background-radius: 3;");
+        buyButton.setOnAction(e -> {
+            final Item finalItem = item;
+            boolean success = game.buyItem(finalItem);
+
+            Platform.runLater(() -> {
+                if (success) {
+                    // Mostrar toast bloqueante de ÉXITO
+                    showToastWithBlock("¡BOUGHT!\n"
+                            + finalItem.getName()
+                            + "\nAdded to inventory", 1500);
+
+                    // Refrescar pantalla de compra DESPUÉS del toast
+                    PauseTransition refreshDelay = new PauseTransition(Duration.millis(1800)); // 1.8 segundos
+                    refreshDelay.setOnFinished(event -> {
+                        Platform.runLater(() -> {
+                            openBuyScreen(); // Refrescar misma pantalla
+                        });
+                    });
+                    refreshDelay.play();
+                } else {
+                    // Mostrar toast bloqueante de ERROR
+                    showErrorToast("¡PURCHASE ERROR!\n"
+                            + "You don't have enough money for\n"
+                            + finalItem.getName(), 1500);
+                }
+            });
+        });
+
+        // Deshabilitar botón si no hay dinero suficiente
+        Hero hero = game.getHero();
+        if (hero != null && hero.getMoney() < cost) {
+            buyButton.setDisable(true);
+            buyButton.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: #bdc3c7; "
+                    + "-fx-font-weight: bold; -fx-background-radius: 3;");
+        }
+
+        row.getChildren().addAll(nameLabel, descLabel, typeLabel, priceLabel, buyButton);
+        return row;
+    }
+
+    private StackPane createMainMenu() {
+        StackPane screen = new StackPane();
+        screen.setPrefSize(VIEW_W, VIEW_H);
+        screen.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7);");
+        screen.setPickOnBounds(true);
+
+        VBox menuBox = new VBox(20);
+        menuBox.setAlignment(Pos.CENTER);
+        menuBox.setPrefSize(400, 300);
+        menuBox.setStyle("-fx-background-color: linear-gradient(to bottom, #2c3e50, #34495e); "
+                + "-fx-background-radius: 10; "
+                + "-fx-border-color: #ecf0f1; "
+                + "-fx-border-width: 2; "
+                + "-fx-border-radius: 10; "
+                + "-fx-padding: 30;");
+
+        Label title = new Label("VILLAGE SHOP");
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #f1c40f;");
+        Button buyButton = createShopButton("BUY", "#2ecc71");
+        Button sellButton = createShopButton("SELL", "#e74c3c");
+        Button exitButton = createShopButton("EXIT", "#95a5a6");
+
+        // Acciones SIMPLES
+        buyButton.setOnAction(e -> openBuyScreen());
+        sellButton.setOnAction(e -> openSellScreen());
+        exitButton.setOnAction(e -> closeShopInterface());
+
+        exitButton.setDefaultButton(true);
+
+        Hero hero = game.getHero();
+        Label moneyLabel = new Label("Money: " + (hero != null ? hero.getMoney() : 0) + " coins");
+        moneyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #ecf0f1;");
+
+        menuBox.getChildren().addAll(title, moneyLabel, buyButton, sellButton, exitButton);
+        screen.getChildren().add(menuBox);
+        // Solo ESC para salir
+        screen.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ESCAPE) {
+                closeShopInterface();
+                e.consume();
+            }
+        });
+
+        return screen;
+    }
+
+    private StackPane createBuyScreen() {
+        StackPane screen = new StackPane();
+        screen.setPrefSize(VIEW_W, VIEW_H);
+        screen.setStyle("-fx-background-color: rgba(0, 0, 0, 0.8);");
+        screen.setPickOnBounds(true);
+
+        VBox mainPanel = new VBox(10);
+        mainPanel.setAlignment(Pos.TOP_CENTER);
+        mainPanel.setPrefSize(VIEW_W - 100, VIEW_H - 100);
+        mainPanel.setStyle("-fx-background-color: #34495e; "
+                + "-fx-background-radius: 10; "
+                + "-fx-padding: 20;");
+
+        Label title = new Label("BUY ITEMS");
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #f1c40f;");
+        Hero hero = game.getHero();
+        Label moneyLabel = new Label("Available money: " + (hero != null ? hero.getMoney() : 0) + " coins");
+        moneyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #ecf0f1;");
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setPrefSize(VIEW_W - 150, VIEW_H - 250);
+        scrollPane.setStyle("-fx-background: transparent; -fx-background-color: #2c3e50;");
+
+        VBox itemsList = new VBox(5);
+        itemsList.setStyle("-fx-padding: 10;");
+
+        ArrayList<Item> buyableItems = game.getShopItems();
+        if (buyableItems.isEmpty()) {
+            Label noItems = new Label("Not available items to buy.");
+            noItems.setStyle("-fx-text-fill: #bdc3c7; -fx-font-style: italic;");
+            itemsList.getChildren().add(noItems);
+        } else {
+            for (Item item : buyableItems) {
+                if (item instanceof Buyable) {
+                    HBox itemRow = createBuyItemRow(item);
+                    itemsList.getChildren().add(itemRow);
+                }
+            }
+        }
+
+        scrollPane.setContent(itemsList);
+
+        // Botón VOLVER - va al MENÚ PRINCIPAL
+        Button backButton = new Button("BACK TO MENU");
+        backButton.setPrefSize(180, 40);
+        backButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; "
+                + "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5;");
+        backButton.setOnAction(e -> openShopMenu()); // Vuelve al menú principal
+
+        backButton.setDefaultButton(true);
+
+        mainPanel.getChildren().addAll(title, moneyLabel, scrollPane, backButton);
+        screen.getChildren().add(mainPanel);
+
+        // ESC también vuelve al menú principal
+        screen.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ESCAPE) {
+                openShopMenu();
+                e.consume();
+            }
+        });
+
+        return screen;
+    }
+
+    private StackPane createSellScreen() {
+        StackPane screen = new StackPane();
+        screen.setPrefSize(VIEW_W, VIEW_H);
+        screen.setStyle("-fx-background-color: rgba(0, 0, 0, 0.8);");
+        screen.setPickOnBounds(true);
+
+        VBox mainPanel = new VBox(10);
+        mainPanel.setAlignment(Pos.TOP_CENTER);
+        mainPanel.setPrefSize(VIEW_W - 100, VIEW_H - 100);
+        mainPanel.setStyle("-fx-background-color: #34495e; "
+                + "-fx-background-radius: 10; "
+                + "-fx-padding: 20;");
+
+        Label title = new Label("SELL ITEMS");
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #f1c40f;");
+        Hero hero = game.getHero();
+        Label moneyLabel = new Label("Available money: " + (hero != null ? hero.getMoney() : 0) + " coins");
+        moneyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #ecf0f1;");
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setPrefSize(VIEW_W - 150, VIEW_H - 250);
+        scrollPane.setStyle("-fx-background: transparent; -fx-background-color: #2c3e50;");
+
+        VBox itemsList = new VBox(5);
+        itemsList.setStyle("-fx-padding: 10;");
+
+        ArrayList<Item> sellableItems = game.getSellableItems();
+        if (sellableItems.isEmpty()) {
+            Label noItems = new Label("You don't have items to sell.");
+            noItems.setStyle("-fx-text-fill: #bdc3c7; -fx-font-style: italic;");
+            itemsList.getChildren().add(noItems);
+        } else {
+            for (Item item : sellableItems) {
+                HBox itemRow = createSellItemRow(item);
+                itemsList.getChildren().add(itemRow);
+            }
+        }
+
+        scrollPane.setContent(itemsList);
+
+        // Botón VOLVER - va al MENÚ PRINCIPAL
+        Button backButton = new Button("BACK TO MENU");
+        backButton.setPrefSize(180, 40);
+        backButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; "
+                + "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5;");
+        backButton.setOnAction(e -> openShopMenu()); // Vuelve al menú principal
+
+        backButton.setDefaultButton(true);
+
+        mainPanel.getChildren().addAll(title, moneyLabel, scrollPane, backButton);
+        screen.getChildren().add(mainPanel);
+
+        // ESC también vuelve al menú principal
+        screen.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ESCAPE) {
+                openShopMenu();
+                e.consume();
+            }
+        });
+
+        return screen;
+    }
+
+    /**
+     * Crea una fila para un item en la pantalla de venta
+     */
+    private HBox createSellItemRow(Item item) {
+        HBox row = new HBox(15);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setStyle("-fx-background-color: #2c3e50; "
+                + "-fx-background-radius: 5; "
+                + "-fx-padding: 10; "
+                + "-fx-border-color: #34495e; "
+                + "-fx-border-width: 1;");
+
+        // Nombre del item
+        Label nameLabel = new Label(item.getName());
+        nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #ecf0f1;");
+        nameLabel.setPrefWidth(150);
+
+        // Descripción
+        Label descLabel = new Label(item.getInfo());
+        descLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #bdc3c7;");
+        descLabel.setWrapText(true);
+        descLabel.setPrefWidth(250);
+
+        // Tipo y estadísticas
+        String type = "";
+        final int[] salePrice = new int[1];
+
+        if (item instanceof Weapon) {
+            Weapon weapon = (Weapon) item;
+            type = "Weapon (Attack: " + weapon.getAttack() + ")";
+            salePrice[0] = weapon.getSalePrice();
+        } else if (item instanceof Armor) {
+            Armor armor = (Armor) item;
+            type = "Armor (Defense: " + armor.getDefense() + ")";
+            salePrice[0] = armor.getSalePrice();
+        } else if (item instanceof Wares) {
+            Wares ware = (Wares) item;
+            type = "Consumable (Healing: " + ware.getHealing() + ")";
+            salePrice[0] = ware.getSalePrice();
+        }
+
+        Label typeLabel = new Label(type);
+        typeLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #3498db;");
+
+        Label priceLabel = new Label("Sale price: " + salePrice[0] + " coins");
+        priceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #e74c3c;");
+
+        // Botón de vender
+        Button sellButton = new Button("SELL");
+        sellButton.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; "
+                + "-fx-font-weight: bold; -fx-background-radius: 3;");
+        final Item finalItem = item;
+        sellButton.setOnAction(e -> {
+            // Buscar el item por ID
+            Item itemToSell = null;
+            Hero hero = game.getHero();
+            boolean encontrado = false;
+            int i = 0;
+
+            while (i < hero.getItems().size() && !encontrado) {
+                Item invItem = hero.getItems().get(i);
+                if (invItem.getId().equals(finalItem.getId())) {
+                    itemToSell = invItem;
+                    encontrado = true;
+                }
+                i++;
+            }
+            if (itemToSell != null) {
+                final Item finalItemTS = itemToSell;
+                boolean success = game.sellItem(finalItemTS);
+
+                Platform.runLater(() -> {
+                    if (success) {
+                        // Toast bloqueante de ÉXITO
+                        showToastWithBlock("¡SOLD!\n"
+                                + finalItemTS.getName()
+                                + "\n+" + salePrice[0] + " coins", 1500);
+
+                        // Refrescar pantalla de venta DESPUÉS del toast
+                        PauseTransition refreshDelay = new PauseTransition(Duration.millis(1800));
+                        refreshDelay.setOnFinished(event -> {
+                            Platform.runLater(() -> {
+                                openSellScreen(); // Refrescar misma pantalla
+                            });
+                        });
+                        refreshDelay.play();
+
+                    } else {
+                        // Toast bloqueante de ERROR
+                        showErrorToast("¡SOLD ERROR!\n"
+                                + "Cannot be sold " + finalItemTS.getName(), 1500);
+                    }
+                });
+            } else {
+                Platform.runLater(() -> {
+                    showErrorToast("¡ERROR!\nItem not found", 1500);
+                });
+            }
+        });
+
+        row.getChildren().addAll(nameLabel, descLabel, typeLabel, priceLabel, sellButton);
+        return row;
+    }
+
+    /**
+     * Muestra un toast con overlay bloqueante (impide interacción hasta que
+     * desaparezca)
+     */
+    private void showToastWithBlock(String message, int durationMs) {
+        Platform.runLater(() -> {
+            // 1. Crear overlay bloqueante (semi-transparente)
+            Rectangle blockOverlay = new Rectangle(VIEW_W, VIEW_H);
+            blockOverlay.setFill(Color.rgb(0, 0, 0, 0.3)); // Negro semi-transparente
+            blockOverlay.setMouseTransparent(false); // IMPORTANTE: Bloquea clicks
+            blockOverlay.setPickOnBounds(true);
+
+            // 2. Crear el toast
+            Label toast = new Label(message);
+            toast.setStyle("-fx-background-color: rgba(0, 0, 0, 0.9); "
+                    + "-fx-text-fill: #00ff00; "
+                    + // Verde para éxito
+                    "-fx-padding: 15 25; "
+                    + "-fx-background-radius: 10; "
+                    + "-fx-font-size: 18px; "
+                    + "-fx-font-weight: bold; "
+                    + "-fx-effect: dropshadow(gaussian, white, 10, 0.7, 0, 0); "
+                    + "-fx-border-color: #00ff00; "
+                    + "-fx-border-width: 2; "
+                    + "-fx-border-radius: 10;");
+
+            // 3. Contenedor para toast (centrado)
+            StackPane toastContainer = new StackPane(toast);
+            toastContainer.setMouseTransparent(true); // Toast no bloquea
+            StackPane.setAlignment(toast, Pos.CENTER);
+
+            // 4. Contenedor principal (overlay + toast)
+            StackPane overlayContainer = new StackPane(blockOverlay, toastContainer);
+            overlayContainer.setPickOnBounds(true);
+
+            // Agregar al root
+            root.getChildren().add(overlayContainer);
+            overlayContainer.toFront();
+
+            // 5. Animación de entrada
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(300), overlayContainer);
+            fadeIn.setFromValue(0);
+            fadeIn.setToValue(1);
+
+            // 6. Esperar duración
+            PauseTransition pause = new PauseTransition(Duration.millis(durationMs));
+
+            // 7. Animación de salida
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(300), overlayContainer);
+            fadeOut.setFromValue(1);
+            fadeOut.setToValue(0);
+            fadeOut.setOnFinished(e -> {
+                root.getChildren().remove(overlayContainer);
+            });
+
+            // 8. Secuencia de animaciones
+            SequentialTransition sequence = new SequentialTransition(fadeIn, pause, fadeOut);
+            sequence.play();
+        });
+    }
+
+    /**
+     * Toast de error con overlay bloqueante
+     */
+    private void showErrorToast(String message, int durationMs) {
+        Platform.runLater(() -> {
+            Rectangle blockOverlay = new Rectangle(VIEW_W, VIEW_H);
+            blockOverlay.setFill(Color.rgb(0, 0, 0, 0.3));
+            blockOverlay.setMouseTransparent(false);
+            blockOverlay.setPickOnBounds(true);
+
+            Label toast = new Label(message);
+            toast.setStyle("-fx-background-color: rgba(0, 0, 0, 0.9); "
+                    + "-fx-text-fill: #ff5555; "
+                    + // Rojo para error
+                    "-fx-padding: 15 25; "
+                    + "-fx-background-radius: 10; "
+                    + "-fx-font-size: 18px; "
+                    + "-fx-font-weight: bold; "
+                    + "-fx-effect: dropshadow(gaussian, white, 10, 0.7, 0, 0); "
+                    + "-fx-border-color: #ff5555; "
+                    + "-fx-border-width: 2; "
+                    + "-fx-border-radius: 10;");
+
+            StackPane toastContainer = new StackPane(toast);
+            toastContainer.setMouseTransparent(true);
+            StackPane.setAlignment(toast, Pos.CENTER);
+
+            StackPane overlayContainer = new StackPane(blockOverlay, toastContainer);
+            overlayContainer.setPickOnBounds(true);
+
+            root.getChildren().add(overlayContainer);
+            overlayContainer.toFront();
+
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(300), overlayContainer);
+            fadeIn.setFromValue(0);
+            fadeIn.setToValue(1);
+
+            PauseTransition pause = new PauseTransition(Duration.millis(durationMs));
+
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(300), overlayContainer);
+            fadeOut.setFromValue(1);
+            fadeOut.setToValue(0);
+            fadeOut.setOnFinished(e -> root.getChildren().remove(overlayContainer));
+
+            SequentialTransition sequence = new SequentialTransition(fadeIn, pause, fadeOut);
+            sequence.play();
+        });
+    }
+
     private void createMover() {
         mover = new AnimationTimer() {
             private long last = -1;
@@ -637,6 +1352,7 @@ public class JVStore {
         boolean isIdle = (vx == 0 && vy == 0);
         if (isIdle) {
             checkStartIntersection();
+            checkStoreTableIntersection();
         } else {
             moveHero(vx * dt, vy * dt);
         }
@@ -688,6 +1404,7 @@ public class JVStore {
         }
         checkExitArea();
         checkStartIntersection();
+        checkStoreTableIntersection();
         updateCamera();
     }
 

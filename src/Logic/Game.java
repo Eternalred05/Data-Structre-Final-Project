@@ -20,6 +20,7 @@ public class Game {
     private ArrayList<NPC> characters;
     private ArrayList<Task> tasks;
     private ArrayList<Item> items;
+    private ArrayList<Item> shopItems;
     private GeneralTree<Classes> classes;
     private LocalDateTime playedTime;
 
@@ -174,6 +175,7 @@ public class Game {
         this.characters = new ArrayList<>();
         this.tasks = new ArrayList<>();
         this.items = new ArrayList<>();
+        this.shopItems = new ArrayList<>();
         this.classes = new GeneralTree<>();
 
         createClassTree();
@@ -347,42 +349,83 @@ public class Game {
 
     public void createItems() {
         //Weapons
-        items.add(new Fist("Your hands, it is the easiest way to attack!", "Bare Hands", "H000", 5, 120000, "Inflicts damage.", -1));
-        items.add(new Sword("Basic Sword made of old trees.", "Wooden Sword", "SW000", 9, 120000, "Hard but cuts", 30));
-        items.add(new Spell("Basic thrown magic with hands", "Basic Spell", "H001", 6, 10, "It can attack", 50));
+        //0
+        items.add(new Fist("Your hands, it is the easiest way to attack!", "Bare Hands", "H000", 5, 120000, "Inflicts damage.", -1, -1));
+        //1
+        items.add(new Sword("Basic Sword made of old trees.", "Wooden Sword", "SW000", 9, 120000, "Hard but cuts", 30, 15));
+        //2
+        items.add(new Spell("Basic thrown magic with hands", "Basic Spell", "H001", 6, 10, "It can attack", 50, 25));
+        //3
         items.add(new Gun("It shoots.", "Desert Eagle", "GUN01", 20, 100, "Inflict damage.",
-                "A", 30, 50.0));
-        items.add(new Sword("It cuts.", "Guardian Sword", "SW01", 30, 100, "Inflicts damage.", 100));
-        items.add(new Spear("It drills.", "Guardian Spear", "SP000", 18, 100, "Inflicts damage.", 100));
-        items.add(new Claymore("An old weapon belonging to the royal guard of the kingdom.", "Royal Claymore", "CLY01", 100, 100, "Inflicts damage", 300));
-        items.add(new Wares("It cures.", "Healing Bandages", "WS01", 50, 10));
-        items.add(new Armor("Basic Armor", "Broken Cloath", "A000", 5, "Offers extra Defense", 5));
-        items.add(new Fist("Monster Claws to scratch the enemy", "Claws", "H002", 13, 120000, "Inflicts damage by scratching.", 15));
-        items.add(new Spear("A punzanct surface weapon", "Spike", "SP001", 6, 2, "It can hurt a bit more on some attacks", 10));
-        items.add(new Spell("Dark magic spells", "Basic Spell", "H003", 6, 10, "It can attack launching shadow balls", 25));
-        items.add(new Fist("Tentacles to constrict the enemy", "Tentacles", "H004", 14, 120000, "Inflicts damage by constriction.", 10));
-        items.add(new Spell("Fire throwing spell", "Flamethrower", "H005", 12, 15, "Inflicts damage by burning.", 120));
-        items.add(new Armor("Basic Armor", "Adventurer´s Cloath", "A001", 9, "Worn by a mysterious adventurer that once saved the Kingdom.", 45));
+                "A", 30, 50.0, 15));
+        //4
+        items.add(new Sword("It cuts.", "Guardian Sword", "SW01", 30, 100, "Inflicts damage.", 100, 50));
+        //5
+        items.add(new Spear("It drills.", "Guardian Spear", "SP000", 18, 100, "Inflicts damage.", 100, 50));
+        //6
+        items.add(new Claymore("An old weapon belonging to the royal guard of the kingdom.", "Royal Claymore", "CLY01", 100, 100, "Inflicts damage", 300, 150));
+        //7
+        items.add(new Wares("It cures.", "Healing Bandages", "WS01", 50, 10, 5));
+        //8
+        items.add(new Armor("Basic Armor", "Broken Cloath", "A000", 5, "Offers extra Defense", 5, 3));
+        //9
+        items.add(new Fist("Monster Claws to scratch the enemy", "Claws", "H002", 13, 120000, "Inflicts damage by scratching.", 15, 7));
+        //10
+        items.add(new Spear("A punzanct surface weapon", "Spike", "SP001", 6, 2, "It can hurt a bit more on some attacks", 10, 5));
+        //11
+        items.add(new Spell("Dark magic spells", "Basic Spell", "H003", 6, 10, "It can attack launching shadow balls", 25, 12));
+        //12
+        items.add(new Fist("Tentacles to constrict the enemy", "Tentacles", "H004", 14, 120000, "Inflicts damage by constriction.", 10, 5));
+        //13
+        items.add(new Spell("Fire throwing spell", "Flamethrower", "H005", 12, 15, "Inflicts damage by burning.", 120, 60));
+        //14
+        items.add(new Armor("Basic Armor", "Adventurer´s Cloath", "A001", 9, "Worn by a mysterious adventurer that once saved the Kingdom.", 45, 22));
         //    Weapon w = new Weapon(info, name, id, 0, 0, effect,cost) 
 
         //Healing items
-        items.add(new Wares("It cures.", "Ultra Potion", "P000", 75, 120));
-        items.add(new Wares("It cures.", "Sacred Potion", "P001", 100, 200));
-        items.add(new Wares("It cures.", "Blueberry", "B000", 10, 15));
-        items.add(new Wares("It cures.", "Raspberry", "B001", 25, 25));
+        //15
+        items.add(new Wares("It cures.", "Ultra Potion", "P000", 75, 120, 60));
+        //16
+        items.add(new Wares("It cures.", "Sacred Potion", "P001", 100, 200, 100));
+        //17
+        items.add(new Wares("It cures.", "Blueberry", "B000", 10, 15, 7));
+        //18
+        items.add(new Wares("It cures.", "Raspberry", "B001", 25, 25, 12));
         //Wares(String description, String name, String id, int healing,int cost)
 
         //Key Items
+        //19
         items.add(new KeyItem("A mysterious orb found in the Swamp.", "Toxic Orb.", "K000"));
+        //20
         items.add(new KeyItem("A mysterious orb found in the Volcano.", "Lava Orb.", "K001"));
+        //21
         items.add(new KeyItem("Use it to open a door.", "Key.", "K002"));
+        //22
         items.add(new KeyItem("The Village's Mayor authorization.", "Mayor's letter.", "K003"));
         //KeyItem(String info, String name, String id)
 
         //More armor
-        items.add(new Armor("Stronger armor", "Steel Plate", "A002", 14, "A sturdy armor forged by a great smith.", 200));
-        items.add(new Armor("Stronger armor", "Sapphire Plate", "A003", 20, "Majestic armor worn by the most royal soldiers.", 500));
+        //23
+        items.add(new Armor("Stronger armor", "Steel Plate", "A002", 14, "A sturdy armor forged by a great smith.", 200, 100));
+        //24
+        items.add(new Armor("Stronger armor", "Sapphire Plate", "A003", 20, "Majestic armor worn by the most royal soldiers.", 500, 250));
         //Armor(String info, String name, String id ,int defense, String effect)
+
+        //More Weapons
+        //25
+        items.add(new Saber("An elegant sword for dueling.", "Dueling Saber", "SB002", 38, 110, "Precise thrust attacks", 300, 150));
+        //26
+        items.add(new Spear("A very long spear for keeping enemies at distance.", "Long Pike", "PK001", 42, 130, "Extra reach advantage", 400, 200));
+        //27
+        items.add(new Spear("A ceremonial halberd with ornate design.", "Royal Halberd", "HLB002", 65, 150, "Increased critical chance", 600, 300));
+        //28
+        items.add(new Gun("A double-barreled shotgun for close combat.", "Double Barrel", "SHG002", 85, 70, "Massive close-range damage", "Shotgun", 450, 2.5, 180));
+        //29
+        items.add(new Gun("An automatic rifle for sustained fire.", "Assault Rifle", "RFL002", 70, 100, "Rapid fire capability", "Rifle", 500, 6.0, 220));
+        //30
+        items.add(new Wand("A crystal-tipped wand for powerful spells.", "Crystal Wand", "WND002", 40, 95, "Enhanced magic power", 450, 225));
+        //31
+        items.add(new HealingSpell("A powerful healing magic.", "Greater Heal", "HSP002", 0, 60, "Restores a large amount of HP", 300, 150));
 
     }
 
@@ -539,9 +582,91 @@ public class Game {
         characters.add(new Villager(false, null, "History Board", "/Resources/sprites/NPC/nothing.png", tasks.getFirst()));
         characters.get(34).getDialogue().add("Long time ago, an expedition departed to search a Treasure, whose location was in the Sky..."
                 + "Even if everyone saw them go they never returned, leaving a great mistery behind, the treasure is still unknown to people and ready to be collected");
-         //35
+        //35
         characters.add(new Villager(false, null, "Shopkeeper", "/Resources/sprites/NPC/shopkeeper.png", null));
         characters.get(35).getDialogue().add("Hello how can i help you?");
+    }
+
+    public boolean buyItem(Item item) {
+
+        boolean ret = false;
+
+        if (hero != null && item != null) {
+            int cost = 0;
+            if (item instanceof Buyable) {
+                cost = ((Buyable) item).getCost();
+                if (hero.getMoney() >= cost) {
+                    hero.setMoney(hero.getMoney() - cost);
+                    hero.getItems().add(item);
+                    ret = true;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public boolean sellItem(Item item) {
+
+        boolean ret = false;
+
+        if (hero != null && item != null) {
+            if (hero.getItems().contains(item)) {
+                if (item instanceof Weapon || item instanceof Armor || item instanceof Wares) {
+                    int salePrice = 0;
+                    if (item instanceof Weapon) {
+                        salePrice = ((Weapon) item).getSalePrice();
+                    } else if (item instanceof Armor) {
+                        salePrice = ((Armor) item).getSalePrice();
+                    } else if (item instanceof Wares) {
+                        salePrice = ((Wares) item).getSalePrice();
+                    }
+                    hero.setMoney(hero.getMoney() + salePrice);
+                    hero.getItems().remove(item);
+                    ret = true;
+                }
+            }
+
+        }
+
+        return ret;
+    }
+
+    public ArrayList<Item> getSellableItems() {
+        ArrayList<Item> sellable = new ArrayList<>();
+        if (hero != null) {
+            for (Item item : hero.getItems()) {
+                if ((item instanceof Weapon || item instanceof Armor || item instanceof Wares)
+                        && !item.getId().equalsIgnoreCase("H000")) {
+                    sellable.add(item);
+                }
+            }
+        }
+        return sellable;
+    }
+
+    public void addShopItems() {
+        shopItems.add(items.get(9));
+
+        shopItems.add(items.get(4));
+        shopItems.add(items.get(6));
+        shopItems.add(items.get(25));
+
+        shopItems.add(items.get(5));
+        shopItems.add(items.get(26));
+        shopItems.add(items.get(27));
+
+        shopItems.add(items.get(3));
+        shopItems.add(items.get(28));
+        shopItems.add(items.get(29));
+
+        shopItems.add(items.get(2));
+        shopItems.add(items.get(30));
+        shopItems.add(items.get(31));
+    }
+
+    public ArrayList<Item> getShopItems() {
+        return shopItems;
     }
 
     public Task searchTask(String id) {
@@ -591,4 +716,5 @@ public class Game {
         hero.completeTask(t);
 
     }
+
 }
