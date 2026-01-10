@@ -415,18 +415,17 @@ public class Game {
         //25
         items.add(new Saber("An elegant sword for dueling.", "Dueling Saber", "SB002", 38, 110, "Precise thrust attacks", 300, 150));
         //26
-        items.add(new Spear("A very long spear for keeping enemies at distance.", "Long Pike", "PK001", 42, 130, "Extra reach advantage", 400, 200));
+        items.add(new Pike("A very long spear for keeping enemies at distance.", "Long Pike", "PK001", 42, 130, "Extra reach advantage", 400, 200));
         //27
-        items.add(new Spear("A ceremonial halberd with ornate design.", "Royal Halberd", "HLB002", 65, 150, "Increased critical chance", 600, 300));
+        items.add(new Halberd("A ceremonial halberd with ornate design.", "Royal Halberd", "HLB002", 65, 150, "Increased critical chance", 600, 300));
         //28
-        items.add(new Gun("A double-barreled shotgun for close combat.", "Double Barrel", "SHG002", 85, 70, "Massive close-range damage", "Shotgun", 450, 2.5, 180));
+        items.add(new Shotgun("A double-barreled shotgun for close combat.", "Double Barrel", "SHG002", 85, 70, "Massive close-range damage", 450, 2.5, 180));
         //29
-        items.add(new Gun("An automatic rifle for sustained fire.", "Assault Rifle", "RFL002", 70, 100, "Rapid fire capability", "Rifle", 500, 6.0, 220));
+        items.add(new Rifle("An automatic rifle for sustained fire.", "Assault Rifle", "RFL002", 70, 100, "Rapid fire capability", 500, 6.0, 220));
         //30
         items.add(new Wand("A crystal-tipped wand for powerful spells.", "Crystal Wand", "WND002", 40, 95, "Enhanced magic power", 450, 225));
         //31
         items.add(new HealingSpell("A powerful healing magic.", "Greater Heal", "HSP002", 0, 60, "Restores a large amount of HP", 300, 150));
-
     }
 
     public void createMonsters() {
@@ -646,23 +645,32 @@ public class Game {
     }
 
     public void addShopItems() {
+        //Fist
         shopItems.add(items.get(9));
-
+        //Sword
         shopItems.add(items.get(4));
         shopItems.add(items.get(6));
         shopItems.add(items.get(25));
-
+        //Spear
         shopItems.add(items.get(5));
         shopItems.add(items.get(26));
         shopItems.add(items.get(27));
-
+        //Gun
         shopItems.add(items.get(3));
         shopItems.add(items.get(28));
         shopItems.add(items.get(29));
-
+        //Spell
         shopItems.add(items.get(2));
         shopItems.add(items.get(30));
         shopItems.add(items.get(31));
+        //Armor
+        shopItems.add(items.get(23));
+        shopItems.add(items.get(14));
+        //Wares
+        shopItems.add(items.get(15));
+        shopItems.add(items.get(16));
+        shopItems.add(items.get(17));
+        shopItems.add(items.get(18));
     }
 
     public ArrayList<Item> getShopItems() {
