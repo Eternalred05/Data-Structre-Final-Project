@@ -426,6 +426,7 @@ public class Game {
         items.add(new Wand("A crystal-tipped wand for powerful spells.", "Crystal Wand", "WND002", 40, 95, "Enhanced magic power", 450, 225));
         //31
         items.add(new HealingSpell("A powerful healing magic.", "Greater Heal", "HSP002", 0, 60, "Restores a large amount of HP", 300, 150));
+
     }
 
     public void createMonsters() {
@@ -449,16 +450,16 @@ public class Game {
         characters.add(new Monster((Weapon) items.get(9), 16, 13, "Dragon Egg", "/Resources/sprites/Monsters/volcano01.png", 110, 110, 95, 140, "Volcano"));
         characters.add(new Monster((Weapon) items.get(9), 20, 14, "Figoat", "/Resources/sprites/Monsters/volcano02.png", 105, 105, 100, 160, "Volcano"));
         characters.add(new Monster((Weapon) items.get(4), 18, 15, "Stone Soldier", "/Resources/sprites/Monsters/volcano03.png", 110, 110, 110, 170, "Volcano"));
-        characters.add(new Monster((Weapon) items.get(13), 50, 50, "Phoenix", "/Resources/sprites/Monsters/volcanoBoss00.png", 300, 300, 300, 300, "Boss"));
-        characters.add(new Monster((Weapon) items.get(13), 62, 90, "Fire Demon King", "/Resources/sprites/Monsters/volcanoBoss01.png", 500, 500, 500, 1500, "Boss"));
+        characters.add(new Boss((Weapon) items.get(13), 50, 50, "Phoenix", "/Resources/sprites/Monsters/volcanoBoss00.png", 300, 300, 300, 300, "Boss"));
+        characters.add(new Boss((Weapon) items.get(13), 62, 90, "Fire Demon King", "/Resources/sprites/Monsters/volcanoBoss01.png", 500, 500, 500, 1500, "Boss"));
         //Sky
         characters.add(new Monster((Weapon) items.get(12), 21, 15, "Fly Sight", "/Resources/sprites/Monsters/skyMonster00.png", 260, 260, 290, 270, "Sky"));
         characters.add(new Monster((Weapon) items.get(9), 24, 12, "Dragon Minion", "/Resources/sprites/Monsters/skyMonster01.png", 295, 225, 320, 310, "Sky"));
         characters.add(new Monster((Weapon) items.get(11), 26, 10, "Novel Sorcerer", "/Resources/sprites/Monsters/skyMonster02.png", 280, 220, 220, 300, "Sky"));
         characters.add(new Monster((Weapon) items.get(2), 20, 14, "Flower Fairy", "/Resources/sprites/Monsters/skyMonster03.png", 290, 290, 200, 180, "Sky"));
         characters.add(new Monster((Weapon) items.get(2), 25, 14, "Demon Harpy", "/Resources/sprites/Monsters/skyMonster04.png", 320, 320, 250, 180, "Sky"));
-        characters.add(new Monster((Weapon) items.get(13), 85, 90, "Light Rider", "/Resources/sprites/Monsters/skyBoss01.png", 1500, 1500, 1500, 1000, "SkyBoss"));
-        characters.add(new Monster((Weapon) items.get(13), 125, 100, "Count Artigas", "/Resources/sprites/Monsters/finalBoss.png", 3500, 3500, 2500, 10500, "SkyBoss"));
+        characters.add(new Boss((Weapon) items.get(13), 85, 90, "Light Rider", "/Resources/sprites/Monsters/skyBoss01.png", 1500, 1500, 1500, 1000, "SkyBoss"));
+        characters.add(new Boss((Weapon) items.get(13), 125, 100, "Count Artigas", "/Resources/sprites/Monsters/finalBoss.png", 3500, 3500, 2500, 10500, "SkyBoss"));
 
         //Monster m = new Monster(weapon, attack, defense, name, sprite, life, actualLife, exp, money, encounter)
     }
@@ -519,8 +520,9 @@ public class Game {
         addTasks(new Task("Search the Toxic Orb.", "Complete the road of Swamp.", "M001", 1000, true));
         getTasks().get(1).addReward(getItems().get(19)); // Orbe Toxico
         addTasks(new Task("Search the Lava Orb.", "Complete the road of Volcano.", "M002", 1000, true));
+        getTasks().get(2).addReward(getItems().get(20)); // Orbe de Fuego
         addTasks(new Task("Battle against the swamp boss.", "Defeat the Swamp Boss Monster to get the toxic orb.", "M003", 0, true));
-        addTasks(new Task("Get the Mayor's authorization.", "Talk with Village's Mayor.", "M003", 500, true));
+        addTasks(new Task("Get the Mayor's authorization.", "Talk with Village's Mayor.", "M005", 500, true));
         //Secondary Quests
         addTasks(new Task("Defeat 5 monsters.", "Kill 5 monsters anywhere.", "Q000", 500, false));
 
@@ -529,6 +531,8 @@ public class Game {
 
         addTasks(new Task("Defeat 30 monsters.", "Kill 30 monsters anywhere.", "Q001", 1000, false));
         addTasks(new Task("Heal yourself.", "Use a healing item once.", "Q002", 100, false));
+        addTasks(new Task("Battle against the sky lake Guardian.", "Beat the Sky guardian in a battle.", "M010", 2000, false));
+        addTasks(new Task("Battle against The Mighty Fenix.", "Beat the Fenix Boss in a battle.", "M004", 2000, false));
         //Task(String name, String info, String id, int money, boolean mainQuest)
     }
 
@@ -644,26 +648,36 @@ public class Game {
         return sellable;
     }
 
+    public boolean healAtInn(int price) {
+        boolean healed = false;
+        if (hero.getActualLife() != hero.getLife()) {
+            if (hero.getMoney() >= price) {
+                healed = true;
+                hero.setMoney(hero.getMoney() - price);
+            }
+        }
+        return healed;
+    }
+
     public void addShopItems() {
-        //Fist
         shopItems.add(items.get(9));
-        //Sword
+
         shopItems.add(items.get(4));
         shopItems.add(items.get(6));
         shopItems.add(items.get(25));
-        //Spear
+
         shopItems.add(items.get(5));
         shopItems.add(items.get(26));
         shopItems.add(items.get(27));
-        //Gun
+
         shopItems.add(items.get(3));
         shopItems.add(items.get(28));
         shopItems.add(items.get(29));
-        //Spell
+
         shopItems.add(items.get(2));
         shopItems.add(items.get(30));
         shopItems.add(items.get(31));
-        //Armor
+
         shopItems.add(items.get(23));
         shopItems.add(items.get(14));
         //Wares
@@ -710,6 +724,13 @@ public class Game {
         return done;
     }
 
+    public void completeMainM000() {
+        Task t = searchTask("M000");
+        t.setState(true);
+        hero.completeTask(t);
+
+    }
+
     public void completeMainM001() {
         Task t = searchTask("M001");
         giveReward(true, t);
@@ -718,8 +739,29 @@ public class Game {
 
     }
 
+    public void completeMainM002() {
+        Task t = searchTask("M002");
+        giveReward(true, t);
+        t.setState(true);
+        hero.completeTask(t);
+
+    }
+
     public void completeMainM003() {
         Task t = searchTask("M003");
+        t.setState(true);
+        hero.completeTask(t);
+
+    }
+
+    public void completeMainM004() {
+        Task t = searchTask("M004");
+        t.setState(true);
+        hero.completeTask(t);
+    }
+
+    public void completeMainM010() {
+        Task t = searchTask("M010");
         t.setState(true);
         hero.completeTask(t);
 

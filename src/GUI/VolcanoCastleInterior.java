@@ -1,14 +1,11 @@
 package GUI;
 
-import Characters.Boss;
-import Characters.Hero;
 import Logic.Game;
 import Misc.Task;
 import Runner.MainScreen;
 import com.almasb.fxgl.dsl.FXGL;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +29,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
-public class VolcanoDungeon {
+public class VolcanoCastleInterior {
 
     private final StackPane root;
     private final Pane world;
@@ -46,35 +43,35 @@ public class VolcanoDungeon {
     private final double HERO_SPEED = 180.0;
     private final Set<KeyCode> keys = new HashSet<>();
     private AnimationTimer mover;
-    private Rectangle orbNode = null;
-    private Rectangle2D orbTrigger = null;
-    private Text orbHintText = null;
 
     private final double VIEW_W = 800;
     private final double VIEW_H = 600;
     private double worldW = VIEW_W;
     private double worldH = VIEW_H;
 
+    private boolean onStartRect = false;
     private Runnable onExitCallback;
     private Rectangle startRect;
     private Rectangle castleRect;
     private final Game game;
 
+    private final List<Rectangle> dungeonTriggerRects = new ArrayList<>();
+    private final List<Rectangle> bossTriggerRects = new ArrayList<>();
+
     private ImageView bossView;
 
     // Sistema de colisiones
     private final List<Obstacle> obstacles = new ArrayList<>();
-    private boolean debugEnabled = false; // R para ver/ocultar áreas de trigger
+    private boolean debugEnabled = false; // puedes activar R para ver cuadros de colisión
 
+    // Inventario (si se abre desde aquí se pasa this)
     private InventoryScreen inventory;
 
-    private final List<Rectangle> dungeonTriggerRects = new ArrayList<>();
-    private final List<Rectangle> bossTriggerRects = new ArrayList<>();
-
-    // Direcciones del héroe (si quieres usarlas para depuración)
+    // Direcciones del héroe (para depuración con tecla P)
     public enum Direction {
         NONE, N, NE, E, SE, S, SW, W, NW
     }
+
     private Direction currentDirection = Direction.NONE;
 
     // Clase interna para obstáculos
@@ -95,7 +92,7 @@ public class VolcanoDungeon {
         BLOCK, PLANT
     }
 
-    public VolcanoDungeon(Game game) {
+    public VolcanoCastleInterior(Game game) {
         this.game = game;
         root = new StackPane();
         root.setPrefSize(VIEW_W, VIEW_H);
@@ -104,9 +101,11 @@ public class VolcanoDungeon {
         world.setPrefSize(VIEW_W, VIEW_H);
 
         loadingOverlay = createLoadingOverlay();
+
         root.getChildren().addAll(world, loadingOverlay);
 
         heroView = createHeroView();
+
         installInputHandlers();
         createMover();
 
@@ -130,20 +129,16 @@ public class VolcanoDungeon {
 
         Platform.runLater(() -> {
             FXGL.getGameScene().addUINode(root);
-            root.requestFocus();
             showLoading(true);
 
-            boolean imageOk = loadBackgroundImage("/Resources/textures/volcanoDungeon/volcanoExterior.png");
-            startMapMusic();
-            if (!game.getHero().existsCompletedTask(game.searchTask("M004")) && !game.getHero().existsPendingTask(game.searchTask("M004"))) {
-                game.getHero().addTasks(game.searchTask("M004"));
-            }
+            boolean imageOk = loadBackgroundImage("/Resources/textures/volcanoDungeon/volcanoPassage.png");
+            boolean musicOk = startDungeonMusic("/Resources/music/volcanoCity.mp3");
 
-            populateCastleObstacles();
+            populateVolcanoObstacles();
+
             positionHeroAtEntrance();
             createStartRectAtHeroStart();
             createCastleRect();
-            drawBossDungeon();
 
             PauseTransition wait = new PauseTransition(Duration.millis(600));
             wait.setOnFinished(e -> {
@@ -159,8 +154,8 @@ public class VolcanoDungeon {
     }
 
     public void hide() {
+        stopDungeonMusic();
         Platform.runLater(() -> {
-            stopMapMusic();
             stopMover();
             try {
                 FXGL.getGameScene().removeUINode(root);
@@ -183,7 +178,7 @@ public class VolcanoDungeon {
         overlay.setPickOnBounds(true);
         Rectangle bg = new Rectangle(VIEW_W, VIEW_H);
         bg.setFill(Color.rgb(0, 0, 0, 0.6));
-        Text label = new Text("Loading Volcano Dungeon..");
+        Text label = new Text("Loading Volcano Zone...");
         label.setStyle("-fx-font-size: 24px; -fx-fill: #e0d090;");
         overlay.getChildren().addAll(bg, label);
         StackPane.setAlignment(label, Pos.CENTER);
@@ -232,7 +227,7 @@ public class VolcanoDungeon {
             }
             ret = true;
         } catch (Throwable t) {
-            Text err = new Text("No se pudo cargar la imagen");
+            Text err = new Text("No se pudo cargar la imagen del Volcan.");
             err.setStyle("-fx-font-size: 16px; -fx-fill: #ffdddd;");
             root.getChildren().add(err);
         }
@@ -246,13 +241,23 @@ public class VolcanoDungeon {
             if (res != null) {
                 Media media = new Media(res.toExternalForm());
                 stopDungeonMusic();
-                music = new MediaPlayer(media);
-                music.setCycleCount(MediaPlayer.INDEFINITE);
-                music.setVolume(MainScreen.getVolumeSetting());
-                music.play();
+                // Crear y reproducir en hilo de JavaFX
+                javafx.application.Platform.runLater(() -> {
+                    try {
+                        music = new MediaPlayer(media);
+                        music.setCycleCount(MediaPlayer.INDEFINITE);
+                        music.setVolume(MainScreen.getVolumeSetting());
+                        music.play();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                });
                 started = true;
+            } else {
+                System.err.println("startDungeonMusic: resource not found -> " + path);
             }
-        } catch (Exception t) {
+        } catch (Exception e) {
+            e.printStackTrace();
             started = false;
         }
         return started;
@@ -285,7 +290,7 @@ public class VolcanoDungeon {
     }
 
     // ---------------- colisiones ----------------
-    private void populateCastleObstacles() {
+    private void populateVolcanoObstacles() {
         obstacles.clear();
 
         double[][] COLLISIONS = new double[][]{};
@@ -293,76 +298,37 @@ public class VolcanoDungeon {
         int idx = 1;
         for (double[] p : COLLISIONS) {
             obstacles.add(new Obstacle(
-                    new Rectangle2D(p[0], p[1], 25, 25),
+                    new Rectangle2D(p[0], p[1], 40, 40),
                     ObstacleType.BLOCK,
-                    "SkyCollision" + idx
+                    "VolcanoCollision" + idx
             ));
             idx++;
-        }
-
-        if (!(game.getHero().existsCompletedTask(game.searchTask("M004")))) {
-            double[][] COLLISIONS2 = new double[][]{
-                {1250.0244400000004, 345.49560000000133},
-                {1192.1942379999996, 345.49560000000133},
-                {1124.338071999999, 345.49560000000133},
-                {1069.9219839999992, 345.49560000000133},
-                {1015.4302239999992, 345.49560000000133},
-                {966.936135999999, 345.49560000000133},
-                {912.9653319999989, 345.49560000000133},
-                {858.2888739999987, 345.49560000000133},};
-
-            for (double[] p : COLLISIONS2) {
-                double x = p[0];
-                double y = p[1];
-                obstacles.add(new Obstacle(
-                        new Rectangle2D(x, y, 30, 30),
-                        ObstacleType.PLANT,
-                        "Colision" + idx
-                ));
-                idx++;
-            }
         }
     }
 
     // ---------------- movimiento y entradas ----------------
     private void positionHeroAtEntrance() {
-        // Ajusta estas coordenadas al punto de entrada real del primer piso
-        double startX = 121.40199400000095;
-        double startY = 0.0;
+
+        double startX = 868.6131420000022;
+        double startY = 1143.106434;
         heroView.setLayoutX(startX);
         heroView.setLayoutY(startY);
         updateCamera();
     }
 
     private void createStartRectAtHeroStart() {
-
         if (startRect != null) {
             world.getChildren().remove(startRect);
             startRect = null;
         }
-
-        // Coordenadas iniciales del héroe
-        double[] xs = {121.40199400000095, 69.70930600000092, 175.1709820000011};
-        double[] ys = {0.0, 0.0, 0.0};
-
-        // Calcular límites mínimos y máximos
-        double minX = Arrays.stream(xs).min().getAsDouble();
-        double maxX = Arrays.stream(xs).max().getAsDouble();
-        double minY = Arrays.stream(ys).min().getAsDouble();
-        double maxY = Arrays.stream(ys).max().getAsDouble();
-
-        // Definir rectángulo que cubra toda la zona inicial
-        double rx = minX;
-        double ry = minY - HERO_H; // un poco hacia arriba para cubrir al héroe
-        double rw = (maxX - minX) + HERO_W;
-        double rh = HERO_H + 20;   // altura suficiente
-
+        double rx = heroView.getLayoutX() - 4;
+        double ry = heroView.getLayoutY() - 4;
+        double rw = HERO_W + 8;
+        double rh = HERO_H + 8;
         startRect = new Rectangle(rx, ry, rw, rh);
         startRect.setFill(Color.rgb(0, 120, 255, 0.28));
         startRect.setStroke(Color.rgb(0, 80, 200, 0.9));
         startRect.setMouseTransparent(true);
-        startRect.getProperties().put("tag", "exit_area");
-
         if (!world.getChildren().contains(startRect)) {
             world.getChildren().add(startRect);
         }
@@ -371,33 +337,36 @@ public class VolcanoDungeon {
     }
 
     private void createCastleRect() {
-
         if (castleRect != null) {
             world.getChildren().remove(castleRect);
             castleRect = null;
         }
-
-        double[] xs = {746.5826560000006, 702.1915240000005, 663.7390240000004};
-        double[] ys = {0.0, 0.0, 0.0};
-
-        // Calcular límites mínimos y máximos
-        double minX = Arrays.stream(xs).min().getAsDouble();
-        double maxX = Arrays.stream(xs).max().getAsDouble();
-        double minY = Arrays.stream(ys).min().getAsDouble();
-        double maxY = Arrays.stream(ys).max().getAsDouble();
-
-        // Definir rectángulo que cubra toda la zona de avance
-        double rx = minX;
-        double ry = minY;
-        double rw = (maxX - minX) + HERO_W; // ancho cubriendo todo el rango
-        double rh = HERO_H + 20;            // altura suficiente para detectar al héroe
+        double[] xs = new double[]{
+           (578.1455400000023)
+        };
+        double y =  94.38837000000024;
+        double minX = xs[0];
+        double maxX = xs[0];
+        for (double v : xs) {
+            if (v < minX) {
+                minX = v;
+            }
+            if (v > maxX) {
+                maxX = v;
+            }
+        }
+        double pad = 4.0;
+        double horizontalSpan = (maxX - minX);
+        double rw = horizontalSpan + HERO_W + pad * 2;
+        double rh = HERO_H + pad * 2;
+        double rx = minX - pad;
+        double ry = y - pad;
 
         castleRect = new Rectangle(rx, ry, rw, rh);
         castleRect.setFill(Color.rgb(200, 120, 0, 0.28));
         castleRect.setStroke(Color.rgb(180, 80, 0, 0.9));
         castleRect.setMouseTransparent(true);
         castleRect.getProperties().put("tag", "castle_area");
-
         if (!world.getChildren().contains(castleRect)) {
             world.getChildren().add(castleRect);
         }
@@ -434,10 +403,7 @@ public class VolcanoDungeon {
                 clearInputState();
                 openInventory();
             }
-            if (k == KeyCode.B) {
-                clearInputState();
-                openDebugCombat();
-            }
+
             if (k == KeyCode.R) {
                 debugEnabled = !debugEnabled;
                 if (debugEnabled) {
@@ -445,18 +411,15 @@ public class VolcanoDungeon {
                 } else {
                     world.getChildren().removeIf(n -> "obstacle_debug".equals(n.getProperties().get("tag")));
                 }
+                for (Task t : game.getHero().getCompletedTasks()) {
+                    System.out.print(t.getName());
 
-            }
-
-            if (k == KeyCode.ENTER) {
-
-                if (bossView != null) {
-                    checkBossTriggers();
                 }
-                checkExitTrigger();
-
             }
-
+            if (k == KeyCode.ENTER) {
+                checkCastleTrigger();
+                checkExitTrigger();
+            }
             ev.consume();
         });
 
@@ -476,7 +439,6 @@ public class VolcanoDungeon {
             }
             ev.consume();
         });
-
         root.setFocusTraversable(true);
         root.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
@@ -499,15 +461,12 @@ public class VolcanoDungeon {
                 double dt = (now - last) / 1e9;
                 last = now;
 
-                boolean proceed = true;
                 if (root.getScene() == null || !root.isFocused()) {
                     clearInputState();
-                    proceed = false;
+                    return;
                 }
 
-                if (proceed) {
-                    updateAndMove(dt);
-                }
+                updateAndMove(dt);
             }
         };
     }
@@ -540,72 +499,50 @@ public class VolcanoDungeon {
             vy += HERO_SPEED;
         }
 
-        boolean shouldMove = !(vx == 0 && vy == 0);
-
-        if (shouldMove) {
-            moveHero(vx * dt, vy * dt);
+        if (vx == 0 && vy == 0) {
+            return;
         }
+
+        moveHero(vx * dt, vy * dt);
     }
 
     private void moveHero(double dx, double dy) {
-        boolean proceed = true;
-        if (heroView == null) {
-            proceed = false;
-        }
+        double curX = heroView.getLayoutX();
+        double curY = heroView.getLayoutY();
 
-        double curX = 0, curY = 0;
-        if (proceed) {
-            curX = heroView.getLayoutX();
-            curY = heroView.getLayoutY();
-        }
-
-        double proposedX = curX;
-        double proposedY = curY;
-        if (proceed) {
-            proposedX = clamp(curX + dx, 0, Math.max(0, worldW - HERO_W));
-            proposedY = clamp(curY + dy, 0, Math.max(0, worldH - HERO_H));
-        }
+        double proposedX = clamp(curX + dx, 0, Math.max(0, worldW - HERO_W));
+        double proposedY = clamp(curY + dy, 0, Math.max(0, worldH - HERO_H));
 
         Rectangle2D heroRect = new Rectangle2D(proposedX, proposedY, HERO_W, HERO_H);
         boolean collision = false;
 
-        if (proceed && obstacles != null) {
-            for (Obstacle ob : obstacles) {
-                if (ob == null || ob.collisionRect == null) {
-                    continue;
-                }
-                if (heroRect.intersects(ob.collisionRect)) {
-                    collision = true;
-                    break;
-                }
+        for (Obstacle ob : obstacles) {
+            if (heroRect.intersects(ob.collisionRect)) {
+                collision = true;
+                break;
             }
         }
 
-        if (proceed && !collision) {
+        if (!collision) {
             heroView.setLayoutX(proposedX);
             heroView.setLayoutY(proposedY);
-        } else if (proceed) {
-
+        } else {
+            // Intento separar ejes X/Y para movimiento "slide"
             Rectangle2D heroRectX = new Rectangle2D(proposedX, curY, HERO_W, HERO_H);
             Rectangle2D heroRectY = new Rectangle2D(curX, proposedY, HERO_W, HERO_H);
 
             boolean canMoveX = true;
             boolean canMoveY = true;
 
-            if (obstacles != null) {
-                for (Obstacle ob : obstacles) {
-                    if (ob == null || ob.collisionRect == null) {
-                        continue;
-                    }
-                    if (heroRectX.intersects(ob.collisionRect)) {
-                        canMoveX = false;
-                    }
-                    if (heroRectY.intersects(ob.collisionRect)) {
-                        canMoveY = false;
-                    }
-                    if (!canMoveX && !canMoveY) {
-                        break;
-                    }
+            for (Obstacle ob : obstacles) {
+                if (heroRectX.intersects(ob.collisionRect)) {
+                    canMoveX = false;
+                }
+                if (heroRectY.intersects(ob.collisionRect)) {
+                    canMoveY = false;
+                }
+                if (!canMoveX && !canMoveY) {
+                    break;
                 }
             }
 
@@ -617,9 +554,7 @@ public class VolcanoDungeon {
             }
         }
 
-        if (proceed) {
-            updateCamera();
-        }
+        updateCamera();
     }
 
     private void updateCamera() {
@@ -642,23 +577,24 @@ public class VolcanoDungeon {
     }
 
     private static double clamp(double v, double lo, double hi) {
-        double result = v;
         if (v < lo) {
-            result = lo;
-        } else if (v > hi) {
-            result = hi;
+            return lo;
         }
-        return result;
+        if (v > hi) {
+            return hi;
+        }
+        return v;
     }
 
     private void clearInputState() {
         keys.clear();
+
     }
 
     public void startMapMusic() {
         try {
             stopMapMusic();
-            URL res = getClass().getResource("/Resources/music/volcanoDungeon.mp3");
+            URL res = getClass().getResource("/Resources/music/volcanoCity.mp3");
             boolean hasRes = res != null;
             if (hasRes) {
                 Media media = new Media(res.toExternalForm());
@@ -687,12 +623,16 @@ public class VolcanoDungeon {
     }
 
     private void drawDebugObstacles() {
-
-        if (startRect != null) {
-            startRect.setFill(debugEnabled ? Color.rgb(0, 120, 255, 0.42) : Color.rgb(0, 120, 255, 0.28));
-        }
-        if (castleRect != null) {
-            castleRect.setFill(debugEnabled ? Color.rgb(200, 120, 0, 0.42) : Color.rgb(200, 120, 0, 0.28));
+        world.getChildren().removeIf(n -> "obstacle_debug".equals(n.getProperties().get("tag")));
+        for (Obstacle ob : obstacles) {
+            Rectangle2D r = ob.collisionRect;
+            Rectangle debug = new Rectangle(r.getMinX(), r.getMinY(), r.getWidth(), r.getHeight());
+            debug.setFill(Color.color(0, 1, 0, 0.25)); // verde semitransparente
+            debug.setStroke(Color.color(0, 1, 0, 0.9));
+            debug.setMouseTransparent(true);
+            debug.getProperties().put("tag", "obstacle_debug");
+            debug.getProperties().put("id", ob.id);
+            world.getChildren().add(debug);
         }
         heroView.toFront();
     }
@@ -700,6 +640,7 @@ public class VolcanoDungeon {
     private void openInventory() {
         stopMover();
 
+        // Pausar música localmente
         try {
             if (music != null) {
                 music.pause();
@@ -735,38 +676,7 @@ public class VolcanoDungeon {
         });
     }
 
-    private void openDebugCombat() {
-        String bg = "/Resources/textures/Battle/VolcanoDungeonBattle.png";
-        stopMapMusic();
-
-        GUI.CombatScreen cs = new GUI.CombatScreen(game, bg, "Sky", game.getHero(), false, null);
-        cs.setBattleMusicPath("/Resources/music/fieldBattle.mp3");
-
-        cs.setOnExit(() -> {
-            Platform.runLater(() -> {
-                try {
-                    FXGL.getGameScene().removeUINode(cs.root);
-                } catch (Throwable ignored) {
-                }
-                try {
-                    FXGL.getGameScene().addUINode(root);
-                } catch (Throwable ignored) {
-                }
-                root.requestFocus();
-                startMapMusic();
-            });
-        });
-
-        Platform.runLater(() -> {
-            try {
-                FXGL.getGameScene().removeUINode(root);
-            } catch (Throwable ignored) {
-            }
-            cs.show();
-        });
-    }
-
-    // Trigger de salida: volver al mapa anterior
+    // Método que comprueba si el héroe está en el área de salida
     private void checkExitTrigger() {
         Rectangle2D heroRect = new Rectangle2D(
                 heroView.getLayoutX(),
@@ -785,20 +695,6 @@ public class VolcanoDungeon {
 
             if (heroRect.intersects(startArea)) {
                 clearInputState();
-                try {
-                    if (game != null && game.getHero() != null) {
-                        Hero h = game.getHero();
-                        h.setLastLocation(Hero.Location.SKY_DUNGEON);
-                        h.setLastPosX(heroView.getLayoutX());
-                        h.setLastPosY(heroView.getLayoutY());
-                        try {
-                            game.createSaveGame();
-                        } catch (Throwable ignored) {
-                        }
-                    }
-                } catch (Throwable ignored) {
-                }
-
                 if (onExitCallback != null) {
                     hide();
                     onExitCallback.run(); // vuelve al mapa anterior
@@ -809,188 +705,45 @@ public class VolcanoDungeon {
         }
     }
 
-    //TODO LO RELACIONADO AL MANEJO DEL BOSS
-    public void drawBossDungeon() {
-        if (!game.getHero().existsCompletedTask(game.getTasks().get(0))) {
-            createBossTriggerRects();
+    private void checkCastleTrigger() {
+        Rectangle2D heroRect = new Rectangle2D(
+                heroView.getLayoutX(),
+                heroView.getLayoutY(),
+                HERO_W,
+                HERO_H
+        );
 
-            boolean skipCreate = false;
-            if (bossView != null) {
-                if (!world.getChildren().contains(bossView)) {
-                    world.getChildren().add(bossView);
-                }
-                bossView.toFront();
-                skipCreate = true;
-            }
+        if (castleRect != null) {
+            Rectangle2D castleArea = new Rectangle2D(
+                    castleRect.getX(),
+                    castleRect.getY(),
+                    castleRect.getWidth(),
+                    castleRect.getHeight()
+            );
 
-            if (!skipCreate) {
-                try {
-                    Image img = new Image(getClass().getResourceAsStream("/Resources/sprites/Monsters/volcanoBoss00.png"));
-                    bossView = new ImageView(img);
+            if (heroRect.intersects(castleArea)) {
+                clearInputState();
+                hide(); // oculta la clase
 
-                    bossView.setPreserveRatio(true);
-                    bossView.setFitWidth(200);
-                    bossView.setFitHeight(200);
-                    bossView.setMouseTransparent(true);
+                VolcanoDungeon castle = new VolcanoDungeon(game);
+                castle.showWithLoading(null, () -> {
+                    Platform.runLater(() -> {
+                        try {
+                            // Volver a añadir la UI de la clase
+                            FXGL.getGameScene().addUINode(root);
+                        } catch (Throwable ignored) {
+                        }
 
-                    bossView.setLayoutX(277.4965360000014);
-                    bossView.setLayoutY(87.53349600000011);
+                        // Reiniciar la música 
+                        startDungeonMusic("/Resources/music/volcanoCity.mp3");
 
-                    bossView.getProperties().put("tag", "volcano_boss");
+                        // Reanudar movimiento y foco
+                        root.requestFocus();
+                        startMover();
+                    });
+                });
 
-                    if (!world.getChildren().contains(bossView)) {
-                        world.getChildren().add(bossView);
-                    }
-                    bossView.toFront();
-
-                } catch (Exception t) {
-                    System.err.println("No se pudo cargar la imagen del boss: " + t.getMessage());
-                }
-            }
-
-        } else {
-            if (bossView != null) {
-                try {
-                    world.getChildren().remove(bossView);
-                } catch (Exception ignored) {
-                }
-                bossView = null;
             }
         }
-    }
-
-    private void createBossTriggerRects() {
-        if (!game.getHero().existsCompletedTask(game.getTasks().get(3))) {
-            for (Rectangle r : bossTriggerRects) {
-                try {
-                    world.getChildren().remove(r);
-                } catch (Throwable ignored) {
-                }
-            }
-            bossTriggerRects.clear();
-
-            double[][] TRIGGERS = new double[][]{
-                {1176.5769699999987, 348.5237580000012},
-                {1117.6297599999987, 348.5237580000012},
-                {1083.1165059999987, 348.5237580000012},
-                {1051.7367999999985, 348.5237580000012},
-                {1017.1041339999991, 348.5237580000012},};
-
-            for (int i = 0; i < TRIGGERS.length; i++) {
-                double x = TRIGGERS[i][0];
-                double y = TRIGGERS[i][1];
-                double w = HERO_W + 8;
-                double h = HERO_H + 8;
-                Rectangle r = new Rectangle(x - 4, y - 4, w, h);
-                r.setFill(Color.color(0, 0, 0, 0.0));
-                r.setStroke(null);
-                r.setMouseTransparent(true);
-                r.getProperties().put("tag", "boss_trigger");
-                r.getProperties().put("id", "bossTRigger" + (i + 1));
-                bossTriggerRects.add(r);
-                if (!world.getChildren().contains(r)) {
-                    world.getChildren().add(r);
-                }
-            }
-            heroView.toFront();
-        }
-    }
-
-    public void redrawRoomAfterBoss() {
-        Platform.runLater(() -> {
-            try {
-                if (bossView != null) {
-                    try {
-                        world.getChildren().remove(bossView);
-                    } catch (Throwable ignored) {
-                    }
-                    bossView = null;
-                }
-
-                try {
-                    for (Rectangle r : bossTriggerRects) {
-                        world.getChildren().remove(r);
-                    }
-                    bossTriggerRects.clear();
-                } catch (Throwable ignored) {
-                }
-
-                obstacles.clear();
-                populateCastleObstacles();
-                if (!world.getChildren().contains(heroView)) {
-                    world.getChildren().add(heroView);
-                }
-                heroView.toFront();
-
-                checkExitTrigger();
-
-                updateCamera();
-
-                FadeTransition ft = new FadeTransition(Duration.millis(260), root);
-                ft.setFromValue(0.95);
-                ft.setToValue(1.0);
-                ft.play();
-
-            } catch (Throwable t) {
-                System.err.println("Error al redibujar la sala tras boss: " + t.getMessage());
-            }
-        });
-    }
-
-    private void checkBossTriggers() {
-        boolean combat = false;
-
-        if (bossView != null) {
-            double hx = heroView.getLayoutX();
-            double hy = heroView.getLayoutY();
-            Rectangle2D heroRect = new Rectangle2D(hx, hy, HERO_W, HERO_H);
-
-            for (Rectangle trigger : bossTriggerRects) {
-                Rectangle2D tr = new Rectangle2D(trigger.getX(), trigger.getY(), trigger.getWidth(), trigger.getHeight());
-                if (heroRect.intersects(tr)) {
-                    combat = true;
-                }
-            }
-        }
-
-        if (combat) {
-            battleAgainstBoss((Boss) game.getCharacters().get(17));
-
-        }
-    }
-
-    private void battleAgainstBoss(Boss boss) {
-        String bg = "/Resources/textures/Battle/VolcanoDungeonBattle.png";
-        stopMapMusic();
-
-        CombatScreen cs = new GUI.CombatScreen(game, bg, "Sky", game.getHero(), true, boss);
-
-        cs.setBattleMusicPath("/Resources/music/bossBattle2.mp3");
-
-        cs.setOnExit(() -> {
-            Platform.runLater(() -> {
-                try {
-                    FXGL.getGameScene().removeUINode(cs.root);
-                } catch (Throwable ignored) {
-                }
-                try {
-                    FXGL.getGameScene().addUINode(root);
-                } catch (Throwable ignored) {
-                }
-                startMapMusic();
-                root.requestFocus();
-            });
-        });
-
-        Platform.runLater(() -> {
-            try {
-                FXGL.getGameScene().removeUINode(root);
-            } catch (Throwable ignored) {
-            }
-            cs.show();
-        });
-        game.completeMainM004();
-        redrawRoomAfterBoss();
-
     }
 }

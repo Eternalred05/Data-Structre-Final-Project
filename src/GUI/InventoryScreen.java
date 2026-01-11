@@ -654,6 +654,26 @@ public class InventoryScreen {
                             h.setLastPosY(1200.0);
                             h.setLastLocation(Hero.Location.SWAMP_DUNGEON);
                         }
+                        case "SkyDungeon" -> {
+                            h.setLastPosX(717.7351259999998);
+                            h.setLastPosY(327.4755660000007);
+                            h.setLastLocation(Hero.Location.SKY_DUNGEON);
+                        }
+                        case "CastleFirstFloor" -> {
+                            h.setLastPosX(717.7351259999998);
+                            h.setLastPosY(327.4755660000007);
+                            h.setLastLocation(Hero.Location.SKY_DUNGEON);
+                        }
+                        case "CastleSecondFloor" -> {
+                            h.setLastPosX(717.7351259999998);
+                            h.setLastPosY(327.4755660000007);
+                            h.setLastLocation(Hero.Location.SKY_DUNGEON);
+                        }
+                        case "CastleLastFloor" -> {
+                            h.setLastPosX(717.7351259999998);
+                            h.setLastPosY(327.4755660000007);
+                            h.setLastLocation(Hero.Location.SKY_DUNGEON);
+                        }
                         default ->
                             h.setLastLocation(Hero.Location.MAP);
                     }

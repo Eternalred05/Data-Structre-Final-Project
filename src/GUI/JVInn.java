@@ -13,8 +13,6 @@ import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -32,7 +30,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Bounds;
@@ -498,15 +495,19 @@ public class JVInn {
 
             if (k == KeyCode.W || k == KeyCode.UP) {
                 keys.add(KeyCode.W);
+                heroView.setImage(game.getHero().getSpriteForDirection("Up"));
             }
             if (k == KeyCode.S || k == KeyCode.DOWN) {
                 keys.add(KeyCode.S);
+                heroView.setImage(game.getHero().getSpriteForDirection("Down"));
             }
             if (k == KeyCode.A || k == KeyCode.LEFT) {
                 keys.add(KeyCode.A);
+                heroView.setImage(game.getHero().getSpriteForDirection("Left"));
             }
             if (k == KeyCode.D || k == KeyCode.RIGHT) {
                 keys.add(KeyCode.D);
+                heroView.setImage(game.getHero().getSpriteForDirection("Right"));
             }
 
             if (k == KeyCode.P) {

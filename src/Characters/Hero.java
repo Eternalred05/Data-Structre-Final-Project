@@ -17,11 +17,17 @@ public class Hero implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public enum Location {
-        MAP, FIELD_VILLAGE, FOREST_HOUSE, SWAMP, SWAMP_DUNGEON, UNKNOWN
+        MAP, FIELD_VILLAGE, FOREST_HOUSE, SWAMP, SWAMP_DUNGEON, SKY_DUNGEON, KINGDOM_CASTLE, UNKNOWN
     }
 
     private String name;
+    
     private String spritePath;
+    private String spriteUpPath;
+    //private String spriteDownPath;
+    private String spriteLeftPath;
+    private String spriteRightPath;
+
     private transient Image fxImage;
     private int expMax;
     private int expActual;
@@ -45,10 +51,14 @@ public class Hero implements Serializable {
     private double lastPosY = 0.0;
 
     public Hero(String name, Weapon weapon, Armor armor, Classes root) {
+
         setName(name);
         setLife(150);
         setActualLife(150);
-        setSpritePath("/Resources/sprites/hero/hero.png");
+        setSpritePath("/Resources/sprites/hero/heroDown.png");
+        setSpriteLeftPath("/Resources/sprites/hero/heroLeft.png");
+        setSpriteRightPath("/Resources/sprites/hero/heroRight.png");
+        setSpriteUpPath("/Resources/sprites/hero/heroUp.png");
         setAttack(7);
         setMagic(20);
         setDefense(3);
@@ -86,6 +96,8 @@ public class Hero implements Serializable {
     public void sumExp(int exp) {
         setExpActual(expActual + exp);
     }
+
+    
 
     public boolean levelUp() {
         boolean levelUp = false;
@@ -226,7 +238,21 @@ public class Hero implements Serializable {
         this.spritePath = spritePath;
         this.fxImage = null;
     }
+    
+    public void setSpriteUpPath(String spritePath) {
+        this.spriteUpPath = spritePath;
+        this.fxImage = null;
+    }
 
+    public void setSpriteLeftPath(String spritePath) {
+        this.spriteLeftPath = spritePath;
+        this.fxImage = null;
+    }
+    
+    public void setSpriteRightPath(String spritePath) {
+        this.spriteRightPath = spritePath;
+        this.fxImage = null;
+    }
     public String getSpritePath() {
         return spritePath;
     }
@@ -404,6 +430,23 @@ public class Hero implements Serializable {
             completedTasks.push(aux.pop());
         }
         return t;
+    }
+
+    public Image getSpriteForDirection(String direcc) {
+        String path = spritePath; 
+        switch (direcc) {
+            case "Up" -> path = spriteUpPath;
+            case "Down" -> path = spritePath;
+            case "Left" -> path = spriteLeftPath;
+            case "Right" -> path = spriteRightPath;
+            default -> {
+            }
+        }
+        try {
+            return new Image(getClass().getResourceAsStream(path));
+        } catch (Throwable t) {
+            return fxImage;
+        }
     }
 
 }

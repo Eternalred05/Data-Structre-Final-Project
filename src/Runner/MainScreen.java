@@ -45,7 +45,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Text;
 
 public class MainScreen extends GameApplication {
-
+    
     private Alert a;
     private Hero hero;
     private Game game;
@@ -63,15 +63,16 @@ public class MainScreen extends GameApplication {
     private GameMapScreen currentMapScreen;
     private static final int DURACION_CARGA_MS = 600;
     public static volatile boolean modalOpen = false;
-
+    
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setTitle("The Mistery of The Ruins");
         settings.setWidth(800);
         settings.setHeight(600);
+        settings.setAppIcon("icon.png");
         settings.setVersion("0.1dev");
     }
-
+    
     @Override
     protected void initInput() {
         FXGL.onKeyDown(KeyCode.UP, () -> {
@@ -81,7 +82,7 @@ public class MainScreen extends GameApplication {
                 updateCursorSmooth();
             }
         });
-
+        
         FXGL.onKeyDown(KeyCode.DOWN, () -> {
             boolean proceed = !MainScreen.isModalOpen() && !configOpen;
             if (proceed) {
@@ -89,14 +90,14 @@ public class MainScreen extends GameApplication {
                 updateCursorSmooth();
             }
         });
-
+        
         FXGL.onKeyDown(KeyCode.ENTER, () -> {
             boolean proceed = !MainScreen.isModalOpen() && !configOpen;
             if (proceed) {
                 activateSelected();
             }
         });
-
+        
         FXGL.onKeyDown(KeyCode.W, () -> {
             boolean proceed = !MainScreen.isModalOpen() && !configOpen;
             if (proceed) {
@@ -104,7 +105,7 @@ public class MainScreen extends GameApplication {
                 updateCursorSmooth();
             }
         });
-
+        
         FXGL.onKeyDown(KeyCode.S, () -> {
             boolean proceed = !MainScreen.isModalOpen() && !configOpen;
             if (proceed) {
@@ -112,9 +113,9 @@ public class MainScreen extends GameApplication {
                 updateCursorSmooth();
             }
         });
-
+        
     }
-
+    
     @Override
     protected void initGame() {
         game = new Game();
@@ -123,9 +124,9 @@ public class MainScreen extends GameApplication {
         game.createTasks();
         game.createVillagers();
         game.addShopItems();
-
+        
     }
-
+    
     @Override
     protected void initUI() {
         Image bgImage = new Image(getClass().getResourceAsStream("/Resources/textures/Main/MainScreen.png"));
@@ -177,7 +178,7 @@ public class MainScreen extends GameApplication {
         rootPane.widthProperty().addListener((o, oldV, newV) -> updateCursorSmooth());
         rootPane.heightProperty().addListener((o, oldV, newV) -> updateCursorSmooth());
     }
-
+    
     private void placeCursorImmediate() {
         updateCursorStyles();
         Node target = menuBox.getChildren().get(selectedIndex);
@@ -187,25 +188,25 @@ public class MainScreen extends GameApplication {
         cursor.setTranslateX(cursorX);
         cursor.setTranslateY(cursorY);
     }
-
+    
     private void updateCursorStyles() {
         int total = menuBox.getChildren().size();
         boolean hasItems = (total > 0);
-
+        
         if (hasItems) {
             if (selectedIndex >= total) {
                 selectedIndex = 0;
             }
-
+            
             Node selNode = menuBox.getChildren().get(selectedIndex);
             boolean selIsDisabled = (selNode instanceof Button) && ((Button) selNode).isDisable();
-
+            
             if (selIsDisabled) {
                 int start = selectedIndex;
                 boolean found = false;
                 int idx = selectedIndex;
                 int attempts = 0;
-
+                
                 while (!found && attempts < total) {
                     idx = (idx + 1) % total;
                     attempts++;
@@ -216,16 +217,16 @@ public class MainScreen extends GameApplication {
                     }
                 }
             }
-
+            
             for (int i = 0; i < total; i++) {
                 Node n = menuBox.getChildren().get(i);
                 boolean isButton = (n instanceof Button);
-
+                
                 if (isButton) {
                     Button b = (Button) n;
                     b.setWrapText(true);
                     b.setAlignment(Pos.CENTER);
-
+                    
                     if (b.isDisable()) {
                         b.setStyle("-fx-background-color: rgba(80,80,80,0.5); -fx-text-fill: rgba(200,200,200,0.7); -fx-background-radius: 6; -fx-padding: 8 12 8 12;");
                         b.setEffect(null);
@@ -240,14 +241,14 @@ public class MainScreen extends GameApplication {
                         b.setFont(Font.font(b.getFont().getFamily(), 20));
                     }
                 } else {
-
+                    
                 }
             }
         } else {
             selectedIndex = 0;
         }
     }
-
+    
     private void updateCursorSmooth() {
         updateCursorStyles();
         Node target = menuBox.getChildren().get(selectedIndex);
@@ -260,7 +261,7 @@ public class MainScreen extends GameApplication {
         tt.setInterpolator(Interpolator.EASE_BOTH);
         tt.play();
     }
-
+    
     private String showNewGameDialog() {
         String resultName = null;
         boolean finished = false;
@@ -289,39 +290,39 @@ public class MainScreen extends GameApplication {
         }
         return resultName;
     }
-
+    
     private void showConfigScreen() {
         Platform.runLater(() -> {
             boolean shouldOpen = !configOpen;
-
+            
             if (shouldOpen) {
                 configOpen = true;
-
+                
                 for (Node n : menuBox.getChildren()) {
                     if (n instanceof Button) {
                         ((Button) n).setDisable(true);
                     }
                 }
-
+                
                 StackPane overlay = new StackPane();
                 overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
                 overlay.setPrefSize(800, 600);
                 overlay.setCursor(Cursor.DEFAULT);
                 overlay.setPickOnBounds(true);
-
+                
                 VBox content = new VBox(16);
                 content.setAlignment(Pos.CENTER);
                 content.setStyle("-fx-background-color: rgba(30,30,30,0.95); -fx-padding: 20; -fx-background-radius: 8;");
                 content.setMaxWidth(420);
-
+                
                 Label title = new Label("Game Settings");
                 title.setFont(Font.font(22));
                 title.setTextFill(Color.WHITE);
-
+                
                 Label volLabel = new Label();
                 volLabel.setTextFill(Color.WHITE);
                 volLabel.setFont(Font.font(14));
-
+                
                 double initialVolume = volumeSetting;
                 try {
                     Object audioRoot = null;
@@ -330,7 +331,7 @@ public class MainScreen extends GameApplication {
                         audioRoot = m.invoke(null);
                     } catch (NoSuchMethodException ignored) {
                     }
-
+                    
                     if (audioRoot == null) {
                         try {
                             var m2 = FXGL.class.getMethod("getAudio");
@@ -338,7 +339,7 @@ public class MainScreen extends GameApplication {
                         } catch (NoSuchMethodException ignored) {
                         }
                     }
-
+                    
                     if (audioRoot != null) {
                         Class<?> cls = audioRoot.getClass();
                         String[] getters = {"getMusicVolume", "getSoundVolume", "getGlobalVolume", "getVolume"};
@@ -358,7 +359,7 @@ public class MainScreen extends GameApplication {
                     }
                 } catch (Exception ignored) {
                 }
-
+                
                 Slider volSlider = new Slider(0, 1, initialVolume);
                 volSlider.setMajorTickUnit(0.1);
                 volSlider.setBlockIncrement(0.05);
@@ -371,7 +372,7 @@ public class MainScreen extends GameApplication {
                     volLabel.setText("Volume: " + pct + "%");
                     applyVolume(newV.doubleValue());
                 });
-
+                
                 Button deleteBtn = new Button("Erase savefile");
                 deleteBtn.setMinWidth(200);
                 deleteBtn.setStyle("-fx-background-color: linear-gradient(#E57373,#EF5350); -fx-text-fill: white; -fx-font-weight: bold;");
@@ -389,27 +390,27 @@ public class MainScreen extends GameApplication {
                             deleted = arch.delete();
                         }
                     }
-
+                    
                     if (deleted) {
                         showBlackModal("Savefile Deleted Correctly", "Save File has been erased correctly", null);
-
+                        
                         for (Node n : menuBox.getChildren()) {
                             if (n instanceof Button) {
                                 Button b = (Button) n;
                                 if ("Continue".equals(b.getText())) {
                                     b.setDisable(true);
                                     b.setStyle("-fx-background-color: rgba(80,80,80,0.5); -fx-text-fill: rgba(200,200,200,0.7);");
-
+                                    
                                 }
                             }
                         }
                     } else {
                         showBlackModal("Save could't be deleted.", "Savefile doesn't exists or couldn't be eliminated.", null);
-
+                        
                     }
-
+                    
                 });
-
+                
                 Button closeBtn = new Button("Close");
                 closeBtn.setMinWidth(120);
                 closeBtn.setOnAction(ev -> {
@@ -417,7 +418,7 @@ public class MainScreen extends GameApplication {
                     if (rootPane != null) {
                         rootPane.setCursor(Cursor.NONE);
                     }
-
+                    
                     boolean saveExists = (game != null && game.getSave() != null && game.getSave().exists());
                     for (Node n : menuBox.getChildren()) {
                         if (n instanceof Button) {
@@ -434,41 +435,41 @@ public class MainScreen extends GameApplication {
                             }
                         }
                     }
-
+                    
                     configOpen = false;
                     Platform.runLater(this::updateCursorSmooth);
                 });
-
+                
                 javafx.scene.layout.HBox foot = new javafx.scene.layout.HBox(12, deleteBtn, closeBtn);
                 foot.setAlignment(Pos.CENTER);
-
+                
                 content.getChildren().addAll(title, volLabel, volSlider, foot);
                 overlay.getChildren().add(content);
                 StackPane.setAlignment(content, Pos.CENTER);
-
+                
                 overlay.addEventFilter(MouseEvent.MOUSE_PRESSED, ev -> {
                     if (ev.getTarget() == overlay) {
                         ev.consume();
                     }
                 });
-
+                
                 FXGL.getGameScene().addUINode(overlay);
                 overlay.requestFocus();
             }
         });
     }
-
+    
     private void startBackgroundMusic() {
         boolean shouldStart = false;
         URL res = null;
-
+        
         try {
             shouldStart = (bgMusic == null);
             if (shouldStart) {
                 res = getClass().getResource("/Resources/music/mainScreen.mp3");
                 shouldStart = (res != null);
             }
-
+            
             if (shouldStart) {
                 Media media = new Media(res.toExternalForm());
                 MediaPlayer player = new MediaPlayer(media);
@@ -480,10 +481,10 @@ public class MainScreen extends GameApplication {
         } catch (Exception ignored) {
         }
     }
-
+    
     public static double getVolumeSetting() {
         double volume = 0.7;
-
+        
         try {
             Object app = FXGL.getApp();
             if (app instanceof MainScreen) {
@@ -491,10 +492,10 @@ public class MainScreen extends GameApplication {
             }
         } catch (Exception ignored) {
         }
-
+        
         return volume;
     }
-
+    
     private void stopBackgroundMusic() {
         try {
             if (bgMusic != null) {
@@ -505,7 +506,7 @@ public class MainScreen extends GameApplication {
         } catch (Throwable ignored) {
         }
     }
-
+    
     private void applyVolume(double vol) {
         this.volumeSetting = vol;
         try {
@@ -557,7 +558,7 @@ public class MainScreen extends GameApplication {
         } catch (Throwable ignored) {
         }
     }
-
+    
     private void activateSelected() {
         boolean proceed = true;
 
@@ -577,7 +578,7 @@ public class MainScreen extends GameApplication {
                 proceed = false;
             }
         }
-
+        
         if (proceed) {
             String sel = labels[selectedIndex];
             Node target = menuBox.getChildren().get(selectedIndex);
@@ -605,7 +606,7 @@ public class MainScreen extends GameApplication {
                 case "Continue":
                     if (game != null && game.getSave() != null && game.getSave().exists()) {
                         boolean correct = game.readSaveGame();
-
+                        
                         if (correct) {
                             String heroName = game.getHero().getName();
                             showBlackModal("The game has started Correctly", "Your save file has loaded correctly: " + heroName, () -> {
@@ -617,17 +618,17 @@ public class MainScreen extends GameApplication {
                         }
                     }
                     break;
-
+                
                 case "New Game":
                     String name = showNewGameDialog();
                     if (name != null) {
                         if (game != null) {
                             game.createHero(name);
                             boolean cor = game.createSaveGame();
-
+                            
                             if (cor) {
                                 showBlackModal("Savefile created!", "The savefile has been created. You can start the game! " + "Enjoy, " + name, null);
-
+                                
                                 for (Node n : menuBox.getChildren()) {
                                     if (n instanceof Button) {
                                         Button b = (Button) n;
@@ -640,27 +641,27 @@ public class MainScreen extends GameApplication {
                                 updateCursorSmooth();
                             } else {
                                 showBlackModal("Savefile was not created!", "The savefile could not be created", null);
-                               
+                                
                             }
                         }
                     }
                     break;
-
+                
                 case "Settings":
                     showConfigScreen();
                     break;
-
+                
                 case "Quit":
                     stopBackgroundMusic();
                     Platform.runLater(Platform::exit);
                     break;
-
+                
                 default:
                     break;
             }
         }
     }
-
+    
     private StackPane newLoadingOverlay() {
         StackPane overlay = new StackPane();
         overlay.setStyle("-fx-background-color: rgba(0,0,0,0.8);");
@@ -688,22 +689,22 @@ public class MainScreen extends GameApplication {
         t.play();
         return overlay;
     }
-
+    
     private void showLoadingThenMap() {
         StackPane overlay = newLoadingOverlay();
         overlay.setOpacity(0);
         FXGL.getGameScene().addUINode(overlay);
-
+        
         FadeTransition fadeIn = new FadeTransition(Duration.millis(180), overlay);
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
         fadeIn.setInterpolator(Interpolator.EASE_OUT);
-
+        
         FadeTransition fadeOut = new FadeTransition(Duration.millis(220), overlay);
         fadeOut.setFromValue(1);
         fadeOut.setToValue(0);
         fadeOut.setInterpolator(Interpolator.EASE_IN);
-
+        
         fadeIn.setOnFinished(e -> {
             PauseTransition pause = new PauseTransition(Duration.millis(DURACION_CARGA_MS));
             pause.setOnFinished(ev -> {
@@ -715,15 +716,15 @@ public class MainScreen extends GameApplication {
                     FXGL.getGameScene().removeUINode(cursor);
                 } catch (Throwable ignored) {
                 }
-
+                
                 currentMapScreen = new GameMapScreen(game);
-
+                
                 Hero h = game.getHero();
                 if (h != null) {
                     Hero.Location loc = h.getLastLocation();
                     double lx = h.getLastPosX();
                     double ly = h.getLastPosY();
-
+                    
                     switch (loc) {
                         case FIELD_VILLAGE -> {
                             double x = 665.5536599999996;
@@ -801,7 +802,43 @@ public class MainScreen extends GameApplication {
                                 });
                             });
                         }
-
+                        case KINGDOM_CASTLE -> {
+                            KingdomCastle kingdom = new KingdomCastle(game);
+                            double startX = 480.87223200000005;
+                            double startY = 768.0;
+                            kingdom.showWithLoading(() -> {
+                                Platform.runLater(() -> kingdom.setHeroPosition(startX, startY));
+                            }, () -> {
+                                Platform.runLater(() -> {
+                                    currentMapScreen.show();
+                                    if (h.getLastLocation() == Hero.Location.MAP) {
+                                        currentMapScreen.setHeroPosition(h.getLastPosX(), h.getLastPosY());
+                                    } else {
+                                        currentMapScreen.resetHeroToCenter();
+                                    }
+                                    currentMapScreen.drawDebugObstacles();
+                                });
+                            });
+                        }
+                        case SKY_DUNGEON -> {
+                            SkyDungeon sky = new SkyDungeon(game);
+                            double startX = 717.7351259999998;
+                            double startY = 327.4755660000007;
+                            sky.showWithLoading(() -> {
+                                Platform.runLater(() -> sky.setHeroPosition(startX, startY));
+                            }, () -> {
+                                Platform.runLater(() -> {
+                                    currentMapScreen.show();
+                                    if (h.getLastLocation() == Hero.Location.MAP) {
+                                        currentMapScreen.setHeroPosition(h.getLastPosX(), h.getLastPosY());
+                                    } else {
+                                        currentMapScreen.resetHeroToCenter();
+                                    }
+                                    currentMapScreen.drawDebugObstacles();
+                                });
+                            });
+                        }
+                        
                         default -> {
                             currentMapScreen.resetHeroToCenter();
                             currentMapScreen.show();
@@ -811,22 +848,22 @@ public class MainScreen extends GameApplication {
                     currentMapScreen.resetHeroToCenter();
                     currentMapScreen.show();
                 }
-
+                
                 fadeOut.play();
             });
             pause.play();
         });
-
+        
         fadeOut.setOnFinished(e2 -> {
             try {
                 FXGL.getGameScene().removeUINode(overlay);
             } catch (Throwable ignored) {
             }
         });
-
+        
         fadeIn.play();
     }
-
+    
     public static void hideMenu() {
         Platform.runLater(() -> {
             try {
@@ -840,7 +877,7 @@ public class MainScreen extends GameApplication {
             }
         });
     }
-
+    
     public static void restoreMenuAndMusic() {
         Platform.runLater(() -> {
             try {
@@ -864,22 +901,22 @@ public class MainScreen extends GameApplication {
             });
         });
     }
-
+    
     public static void setModalOpen(boolean open) {
         modalOpen = open;
     }
-
+    
     public static boolean isModalOpen() {
         return modalOpen;
     }
-
+    
     private void showBlackModal(String titleText, String messageText, Runnable onConfirm) {
         Platform.runLater(() -> {
             if (modalOpen) {
                 return;
             }
             modalOpen = true;
-
+            
             StackPane overlay = new StackPane();
             overlay.setStyle("-fx-background-color: rgba(0,0,0,0.75);");
             overlay.setPrefSize(800, 600);
@@ -891,16 +928,16 @@ public class MainScreen extends GameApplication {
             card.setPadding(new Insets(18));
             card.setMaxWidth(420);
             card.setStyle("-fx-background-color: #0b0b0b; -fx-background-radius: 10; -fx-border-color: #FFD54F; -fx-border-radius: 10; -fx-border-width: 2;");
-
+            
             Label title = new Label(titleText);
             title.setFont(Font.font("System", FontWeight.BOLD, 20));
             title.setTextFill(Color.web("#FFD54F"));
-
+            
             Text message = new Text(messageText);
             message.setFill(Color.WHITE);
             message.setWrappingWidth(360);
             message.setFont(Font.font(14));
-
+            
             Button ok = new Button("OK");
             ok.setMinWidth(120);
             ok.setStyle("-fx-background-color: linear-gradient(#FFD54F,#FFC107); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 6;");
@@ -921,35 +958,35 @@ public class MainScreen extends GameApplication {
                 });
                 ft.play();
             });
-
+            
             card.getChildren().addAll(title, message, ok);
             overlay.getChildren().add(card);
             StackPane.setAlignment(card, Pos.CENTER);
-
+            
             overlay.setOnKeyPressed((KeyEvent ke) -> {
                 if (ke.getCode() == KeyCode.ENTER) {
                     ok.fire();
                     ke.consume();
                 }
             });
-
+            
             overlay.addEventFilter(MouseEvent.MOUSE_PRESSED, ev -> {
                 if (ev.getTarget() == overlay) {
                     ev.consume();
                 }
             });
-
+            
             overlay.setOpacity(0);
             FXGL.getGameScene().addUINode(overlay);
             overlay.requestFocus();
-
+            
             FadeTransition fadeIn = new FadeTransition(Duration.millis(180), overlay);
             fadeIn.setFromValue(0);
             fadeIn.setToValue(1);
             fadeIn.play();
         });
     }
-
+    
     public static void main(String[] args) {
         launch(args);
     }

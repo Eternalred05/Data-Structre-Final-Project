@@ -743,15 +743,19 @@ public class ForestHouse {
 
             if (k == KeyCode.W || k == KeyCode.UP) {
                 keys.add(KeyCode.W);
+                heroView.setImage(game.getHero().getSpriteForDirection("Up"));
             }
             if (k == KeyCode.S || k == KeyCode.DOWN) {
                 keys.add(KeyCode.S);
+                heroView.setImage(game.getHero().getSpriteForDirection("Down"));
             }
             if (k == KeyCode.A || k == KeyCode.LEFT) {
                 keys.add(KeyCode.A);
+                heroView.setImage(game.getHero().getSpriteForDirection("Left"));
             }
             if (k == KeyCode.D || k == KeyCode.RIGHT) {
                 keys.add(KeyCode.D);
+                heroView.setImage(game.getHero().getSpriteForDirection("Right"));
             }
 
             if (k == KeyCode.P) {
@@ -1165,7 +1169,6 @@ public class ForestHouse {
         Swamp swampScene = new Swamp(game);
 
         swampScene.showWithLoading(() -> {
-            System.out.println("Swamp cargado correctamente");
         }, () -> {
 
             showWithLoading(null, onExitCallback);

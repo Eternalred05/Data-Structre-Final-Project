@@ -811,15 +811,19 @@ public class FieldVillage {
 
                 if (k == KeyCode.W || k == KeyCode.UP) {
                     keys.add(KeyCode.W);
+                    heroView.setImage(game.getHero().getSpriteForDirection("Up"));
                 }
                 if (k == KeyCode.S || k == KeyCode.DOWN) {
                     keys.add(KeyCode.S);
+                    heroView.setImage(game.getHero().getSpriteForDirection("Down"));
                 }
                 if (k == KeyCode.A || k == KeyCode.LEFT) {
                     keys.add(KeyCode.A);
+                    heroView.setImage(game.getHero().getSpriteForDirection("Left"));
                 }
                 if (k == KeyCode.D || k == KeyCode.RIGHT) {
                     keys.add(KeyCode.D);
+                    heroView.setImage(game.getHero().getSpriteForDirection("Right"));
                 }
 
                 if (k == KeyCode.P) {
@@ -831,6 +835,11 @@ public class FieldVillage {
                 if (k == KeyCode.I || k == KeyCode.ADD || k == KeyCode.PLUS) {
                     clearInputState();
                     openInventory();
+                }
+                if (k == KeyCode.O) {
+                    game.getHero().completeTask(game.searchTask("M001"));
+                    game.getHero().completeTask(game.searchTask("M002"));
+                    System.out.println("Both Main Missions were completed");
                 }
 
                 if (k == KeyCode.ENTER) {
@@ -878,7 +887,7 @@ public class FieldVillage {
 
                                     } else if ("History Board".equalsIgnoreCase(v.getName())) {
                                         showBottomDialogRPG("History Board", v.getMessageFromList(0), null);
-                                        
+
                                     } else {
                                         showBottomDialogRPG("NPC", "You shouldnt see this, but hey how are you?", null);
                                     }
