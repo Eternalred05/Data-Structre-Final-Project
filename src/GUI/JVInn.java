@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -68,8 +69,9 @@ public class JVInn {
 
     // Sistema de colisiones
     private final List<Obstacle> obstacles = new ArrayList<>();
+    private Obstacle currentInteractable = null;
     private boolean debugEnabled = false;
-    
+
     // para los NPC
     private final List<NPC> npcs = new ArrayList<>();
     private final List<ImageView> npcNodes = new ArrayList<>();
@@ -86,7 +88,7 @@ public class JVInn {
 
     // Tipos de obstáculos para la aldea
     private enum ObstacleType {
-        HOUSE, TREE, WELL, FENCE, BUSH, EXIT, BLOCK, NPC
+        HOUSE, TREE, WELL, FENCE, BUSH, EXIT, BLOCK, NPC, INTERACTABLE
     }
 
     // Clase interna para obstáculos
@@ -120,6 +122,8 @@ public class JVInn {
         installInputHandlers();
         createMover();
 
+        debugEnabled = false;
+
         root.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
             if (!isFocused) {
                 clearInputState();
@@ -147,9 +151,9 @@ public class JVInn {
 
             // Primero poblar colisiones
             populateVillageObstacles();
-            
+
             //
-             // Cargar NPC
+            // Cargar NPC
             addVillagerToList();
             renderNpcs();
 
@@ -359,6 +363,12 @@ public class JVInn {
         ));
 
         obstacles.add(new Obstacle(
+                new Rectangle2D(530, 230, 50, 20),
+                ObstacleType.INTERACTABLE,
+                "inn_counter"
+        ));
+
+        obstacles.add(new Obstacle(
                 new Rectangle2D(338, 195, 500, 40),
                 ObstacleType.BLOCK,
                 "estanteAncho"
@@ -431,6 +441,10 @@ public class JVInn {
                     rect.setFill(Color.rgb(0, 128, 0, 0.4));
                     rect.setStroke(Color.rgb(0, 64, 0, 0.8));
                     break;
+                case INTERACTABLE:
+                    rect.setFill(Color.rgb(0, 255, 255, 0.4));
+                    rect.setStroke(Color.CYAN);
+                    break;
                 default:
                     rect.setFill(Color.rgb(255, 0, 0, 0.3));
                     rect.setStroke(Color.RED);
@@ -489,6 +503,156 @@ public class JVInn {
         heroView.toFront();
     }
 
+    private void checkInteractable() {
+        currentInteractable = null;
+        boolean found = false;
+
+        // Crear un rectángulo de detección más pequeño para mayor precisión
+        Rectangle2D heroRect = new Rectangle2D(
+                heroView.getLayoutX(),
+                heroView.getLayoutY(),
+                HERO_W,
+                HERO_H
+        );
+
+        double extraRange = 30; // 30 píxeles extra en todas direcciones
+        Rectangle2D extendedRect = new Rectangle2D(
+                heroView.getLayoutX() - extraRange,
+                heroView.getLayoutY() - extraRange,
+                HERO_W + (2 * extraRange),
+                HERO_H + (2 * extraRange)
+        );
+
+        // Buscar entre todos los obstáculos interactuables
+        for (int i = 0; i < obstacles.size(); i++) {
+            if (obstacles.get(i).type == ObstacleType.INTERACTABLE && "inn_counter".equals(obstacles.get(i).id)) {
+                // Verificar si el héroe o su área extendida intersectan
+                if (heroRect.intersects(obstacles.get(i).collisionRect) || extendedRect.intersects(obstacles.get(i).collisionRect)) {
+                    currentInteractable = obstacles.get(i);
+                    found = true;
+                }
+            }
+        }
+    }
+
+    private void showInteractableIndicator() {
+        // Remover cualquier indicador anterior
+        world.getChildren().removeIf(n -> "interact_indicator".equals(n.getProperties().get("tag")));
+
+        if (currentInteractable != null && "inn_counter".equals(currentInteractable.id)) {
+            // Crear un indicador más visible
+            VBox indicatorBox = new VBox(5);
+            indicatorBox.setAlignment(Pos.CENTER);
+            indicatorBox.getProperties().put("tag", "interact_indicator");
+
+            // Texto
+            Text text = new Text("Presiona ENTER para interactuar.");
+            text.setStyle("-fx-font-size: 12px; -fx-fill: #FFFFFF; -fx-font-weight: bold;");
+
+            indicatorBox.getChildren().addAll(text);
+
+            // Posicionar encima del área interactiva
+            double indicatorX = currentInteractable.collisionRect.getMinX()
+                    + currentInteractable.collisionRect.getWidth() / 2 - 100;
+            double indicatorY = currentInteractable.collisionRect.getMinY() - 50;
+
+            indicatorBox.setLayoutX(indicatorX);
+            indicatorBox.setLayoutY(indicatorY);
+            indicatorBox.setMouseTransparent(true);
+
+            // Añadir efecto de pulsación
+            ScaleTransition pulse = new ScaleTransition(Duration.millis(1000), indicatorBox);
+            pulse.setFromX(1.0);
+            pulse.setFromY(1.0);
+            pulse.setToX(1.1);
+            pulse.setToY(1.1);
+            pulse.setAutoReverse(true);
+            pulse.setCycleCount(ScaleTransition.INDEFINITE);
+            pulse.play();
+
+            // Guardar referencia para detener la animación después
+            indicatorBox.getProperties().put("pulseAnimation", pulse);
+
+            // Añadir al mundo y traer al frente
+            world.getChildren().add(indicatorBox);
+            indicatorBox.toFront();
+        }
+    }
+
+    private void handleInnInteraction() {
+        stopMover();  // Detener movimiento mientras se muestra el diálogo
+        clearInputState();  // Limpiar estado de teclas
+
+        // Mostrar diálogo de bienvenida y opción de descansar
+        showInnDialog();
+    }
+
+
+    private void handleRestOption(int optionIndex, StackPane modalOverlay) {
+        switch (optionIndex) {
+            case 0: // Descansar
+                attemptToRest(modalOverlay);
+                break;
+            case 1: // Cancelar
+            default:
+                fadeOutAndRemove(modalOverlay);
+                break;
+        }
+    }
+
+    private void attemptToRest(StackPane modalOverlay) {
+        // Usar el método healAtInn de Game con precio de 150 monedas
+        boolean success = game.healAtInn(150);
+
+        String resultMessage;
+        if (success) {
+            resultMessage = "Your life has fully restored.\n"
+                    + "Money: " + game.getHero().getMoney() + " coins\n"
+                    + "Current life: " + game.getHero().getActualLife() + "/" + game.getHero().getLife();
+        } else {
+            resultMessage = "You can't rest now.\n"
+                    + "Posible reasons:\n"
+                    + "• Your life is fully\n"
+                    + "• Not enough money\n"
+                    + "Money: " + game.getHero().getMoney();
+        }
+        // Mostrar resultado
+        showResultDialog(resultMessage, modalOverlay);
+    }
+
+    private void showResultDialog(String message, StackPane previousOverlay) {
+        // Primero remover el diálogo anterior
+        fadeOutAndRemove(previousOverlay);
+
+        // Esperar un momento y mostrar el resultado
+        PauseTransition wait = new PauseTransition(Duration.millis(300));
+        wait.setOnFinished(e -> {
+            showBottomDialogRPG("Result", message, null);
+        });
+        wait.play();
+    }
+
+    
+
+    private void fadeOutAndRemoveDialog(StackPane modalOverlay) {
+        if (modalOverlay != null && root.getChildren().contains(modalOverlay)) {
+            // Ejecutar callback de limpieza
+            Object onRemoved = modalOverlay.getProperties().get("onRemoved");
+            if (onRemoved instanceof Runnable) {
+                ((Runnable) onRemoved).run();
+            }
+
+            // Animación de salida
+            FadeTransition ftOut = new FadeTransition(Duration.millis(200), modalOverlay);
+            ftOut.setFromValue(1.0);
+            ftOut.setToValue(0.0);
+            ftOut.setOnFinished(e -> {
+                root.getChildren().remove(modalOverlay);
+            });
+            ftOut.play();
+        }
+    }
+
     private void installInputHandlers() {
         root.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
             KeyCode k = ev.getCode();
@@ -514,6 +678,11 @@ public class JVInn {
                 System.out.println("Hero position (aldea): (" + heroView.getLayoutX() + ", " + heroView.getLayoutY() + ")");
                 System.out.println("Hero world center (aldea): (" + (heroView.getLayoutX() + HERO_W / 2) + ", " + (heroView.getLayoutY() + HERO_H / 2) + ")");
                 System.out.println("Hero direction: " + getHeroDirection().name());
+
+                if (currentInteractable != null) {
+                    System.out.println("Interactuable detectado: " + currentInteractable.id
+                            + " en área: " + currentInteractable.collisionRect);
+                }
             }
 
             if (k == KeyCode.I || k == KeyCode.ADD || k == KeyCode.PLUS) {
@@ -522,6 +691,7 @@ public class JVInn {
             }
 
             if (k == KeyCode.ENTER) {
+            
                 if (onStartRect) {
                     clearInputState();
                     try {
@@ -543,11 +713,15 @@ public class JVInn {
                     } else {
                         hide();
                     }
+                } else if (currentInteractable != null && "inn_counter".equals(currentInteractable.id)) {
+                    ev.consume();
+                    handleInnInteraction();
                 }
             }
 
             ev.consume();
-        });
+        }
+        );
 
         root.addEventFilter(KeyEvent.KEY_RELEASED, ev -> {
             KeyCode k = ev.getCode();
@@ -661,7 +835,23 @@ public class JVInn {
         setDirectionIfChanged(newDir);
 
         boolean isIdle = (vx == 0 && vy == 0);
+        // Guardar el interactuable anterior para comparar
+        Obstacle previousInteractable = currentInteractable;
+
+        // Siempre verificar interactuables (incluso mientras se mueve)
+        checkInteractable();
+
+        // Mostrar/ocultar indicador según corresponda
+        if (currentInteractable != null) {
+            showInteractableIndicator();
+        } else if (previousInteractable != null) {
+            // Si había un interactuable pero ya no, limpiar el indicador
+            world.getChildren().removeIf(n -> "interact_indicator".equals(n.getProperties().get("tag")));
+        }
+
         if (isIdle) {
+            checkInteractable();
+            showInteractableIndicator();
             checkStartIntersection();
         } else {
             moveHero(vx * dt, vy * dt);
@@ -679,8 +869,10 @@ public class JVInn {
         boolean collision = false;
         for (int i = 0; i < obstacles.size() && !collision; i++) {
             JVInn.Obstacle ob = obstacles.get(i);
-            if (heroRect.intersects(ob.collisionRect)) {
-                collision = true;
+            if (ob.type != ObstacleType.INTERACTABLE && ob.type != ObstacleType.NPC) {
+                if (heroRect.intersects(ob.collisionRect)) {
+                    collision = true;
+                }
             }
         }
 
@@ -938,6 +1130,92 @@ public class JVInn {
         });
     }
 
+    private void showSimpleDialog(String title, String message) {
+        Platform.runLater(() -> {
+            StackPane modalOverlay = new StackPane();
+            modalOverlay.getProperties().put("simpleDialog", true);
+            modalOverlay.setPrefSize(VIEW_W, VIEW_H);
+            modalOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.5);");
+            modalOverlay.setPickOnBounds(true);
+            modalOverlay.setFocusTraversable(true);
+
+            VBox dialogBox = new VBox(15);
+            dialogBox.setMinHeight(150);
+            dialogBox.setMaxWidth(450);
+            dialogBox.setPrefWidth(450);
+            dialogBox.setStyle(
+                    "-fx-background-color: rgba(0,0,0,0.95);"
+                    + "-fx-padding: 20 25 20 25;"
+                    + "-fx-background-radius: 10;"
+                    + "-fx-border-radius: 10;"
+                    + "-fx-border-color: rgba(255,215,0,0.3);"
+                    + "-fx-border-width: 2;"
+            );
+            dialogBox.setEffect(new DropShadow(15, Color.rgb(0, 0, 0, 0.8)));
+            dialogBox.setAlignment(Pos.CENTER);
+
+            // Título
+            Text titleText = new Text(title);
+            titleText.setStyle("-fx-font-size: 18px; -fx-fill: #FFD700; -fx-font-weight: bold;");
+
+            // Mensaje
+            Text messageText = new Text(message);
+            messageText.setWrappingWidth(400);
+            messageText.setStyle("-fx-font-size: 14px; -fx-fill: #FFFFFF; -fx-line-spacing: 5px;");
+            messageText.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+
+            // Botón OK
+            Button okBtn = new Button("OK");
+            okBtn.setStyle(
+                    "-fx-background-color: linear-gradient(#666666, #444444);"
+                    + "-fx-text-fill: #FFFFFF;"
+                    + "-fx-font-weight: bold;"
+                    + "-fx-font-size: 14px;"
+                    + "-fx-background-radius: 5;"
+                    + "-fx-padding: 10 30 10 30;"
+                    + "-fx-min-width: 100;"
+            );
+            okBtn.setDefaultButton(true);
+            okBtn.setOnAction(e -> fadeOutAndRemoveDialog(modalOverlay));
+
+            // Organizar contenido
+            dialogBox.getChildren().addAll(titleText, messageText, okBtn);
+
+            // Añadir al overlay
+            modalOverlay.getChildren().add(dialogBox);
+            StackPane.setAlignment(dialogBox, Pos.CENTER);
+
+            // Añadir al root
+            root.getChildren().add(modalOverlay);
+
+            // Animación
+            FadeTransition ftIn = new FadeTransition(Duration.millis(300), dialogBox);
+            ftIn.setFromValue(0.0);
+            ftIn.setToValue(1.0);
+            ftIn.play();
+
+            // Enfocar
+            Platform.runLater(() -> {
+                modalOverlay.requestFocus();
+                okBtn.requestFocus();
+            });
+
+            // Manejar teclas
+            modalOverlay.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
+                if (ev.getCode() == KeyCode.ENTER || ev.getCode() == KeyCode.ESCAPE) {
+                    ev.consume();
+                    okBtn.fire();
+                }
+            });
+
+            modalOverlay.getProperties().put("onRemoved", (Runnable) () -> {
+                startMover();
+                root.getProperties().put("dialogOpen", false);
+                root.requestFocus();
+            });
+        });
+    }
+
     private void showBottomDialogRPG(String title, String message, String iconResourcePath) {
         Platform.runLater(() -> {
             boolean foundExisting = false;
@@ -1103,6 +1381,170 @@ public class JVInn {
                 });
             }
         });
+    }
+
+    private void showBottomDialogRPGWithOptions(String title, String message, String iconResourcePath, String[] options) {
+        Platform.runLater(() -> {
+            stopMover();
+            root.getProperties().put("dialogOpen", true);
+
+            StackPane modalOverlay = new StackPane();
+            modalOverlay.getProperties().put("rpgDialog", true);
+            modalOverlay.setPrefSize(VIEW_W, VIEW_H);
+            modalOverlay.setStyle("-fx-background-color: transparent;");
+            modalOverlay.setPickOnBounds(true);
+            modalOverlay.setFocusTraversable(true);
+
+            HBox dialogBox = new HBox(10);
+            dialogBox.setMinHeight(100);
+            dialogBox.setMaxHeight(180);
+            dialogBox.setMaxWidth(450);
+            dialogBox.setPrefWidth(450);
+            dialogBox.setStyle(
+                    "-fx-background-color: rgba(0,0,0,0.88);"
+                    + "-fx-padding: 15 15 15 15;"
+                    + "-fx-background-radius: 8;"
+                    + "-fx-border-radius: 8;"
+                    + "-fx-border-color: rgba(255,255,255,0.1);"
+                    + "-fx-border-width: 1;"
+            );
+            dialogBox.setEffect(new DropShadow(8, Color.rgb(0, 0, 0, 0.8)));
+            dialogBox.setAlignment(Pos.CENTER_LEFT);
+
+            // Icono (si existe)
+            ImageView iconView = null;
+            if (iconResourcePath != null) {
+                try {
+                    Image icon = new Image(getClass().getResourceAsStream(iconResourcePath));
+                    iconView = new ImageView(icon);
+                    iconView.setFitWidth(48);
+                    iconView.setFitHeight(48);
+                    iconView.setPreserveRatio(true);
+                } catch (Throwable ignored) {
+                    iconView = null;
+                }
+            }
+
+            // Contenido de texto
+            VBox texts = new VBox(8);
+            Text tTitle = new Text(title);
+            tTitle.setStyle("-fx-font-size: 16px; -fx-fill: #f5f5f5; -fx-font-weight: 700;");
+
+            Text tMsg = new Text(message);
+            tMsg.setWrappingWidth(350);
+            tMsg.setStyle("-fx-font-size: 14px; -fx-fill: #e6e6e6;");
+
+            texts.getChildren().addAll(tTitle, tMsg);
+
+            // Botones de opciones
+            VBox optionsBox = new VBox(5);
+            optionsBox.setAlignment(Pos.CENTER_RIGHT);
+
+            for (int i = 0; i < options.length; i++) {
+                Button optionBtn = new Button(options[i]);
+                optionBtn.setStyle(
+                        "-fx-background-color: linear-gradient(#555555, #333333);"
+                        + "-fx-text-fill: #ffffff;"
+                        + "-fx-font-weight: 600;"
+                        + "-fx-background-radius: 6;"
+                        + "-fx-padding: 8 12 8 12;"
+                        + "-fx-min-width: 180;"
+                );
+
+                final int optionIndex = i;
+                optionBtn.setOnAction(e -> {
+                    handleRestOption(optionIndex, modalOverlay);
+                });
+
+                // Hacer que la primera opción sea la predeterminada
+                if (i == 0) {
+                    optionBtn.setDefaultButton(true);
+                }
+
+                optionsBox.getChildren().add(optionBtn);
+            }
+
+            // Organizar contenido
+            HBox contentBox = new HBox(15);
+            if (iconView != null) {
+                contentBox.getChildren().addAll(iconView, texts, optionsBox);
+            } else {
+                contentBox.getChildren().addAll(texts, optionsBox);
+            }
+
+            dialogBox.getChildren().add(contentBox);
+
+            StackPane.setAlignment(dialogBox, Pos.CENTER);
+            modalOverlay.getChildren().add(dialogBox);
+            root.getChildren().add(modalOverlay);
+
+            // Animación de entrada
+            TranslateTransition tt = new TranslateTransition(Duration.millis(250), dialogBox);
+            tt.setFromY(-30);
+            tt.setToY(0);
+            tt.play();
+
+            FadeTransition ftIn = new FadeTransition(Duration.millis(200), dialogBox);
+            ftIn.setFromValue(0.0);
+            ftIn.setToValue(1.0);
+            ftIn.play();
+
+            // Enfocar el diálogo
+            Platform.runLater(() -> {
+                modalOverlay.requestFocus();
+                if (!optionsBox.getChildren().isEmpty()) {
+                    ((Button) optionsBox.getChildren().get(0)).requestFocus();
+                }
+            });
+
+            // Manejar teclas en el diálogo
+            Platform.runLater(() -> {
+                javafx.scene.Scene scene = root.getScene();
+                if (scene != null) {
+                    javafx.event.EventHandler<KeyEvent> sceneHandler = ev -> {
+                        if (Boolean.TRUE.equals(root.getProperties().get("dialogOpen"))) {
+                            if (ev.getCode() == KeyCode.ESCAPE) {
+                                ev.consume();
+                                // Cancelar (última opción)
+                                handleRestOption(options.length - 1, modalOverlay);
+                            } else if (ev.getCode() == KeyCode.ENTER) {
+                                ev.consume();
+                                // Seleccionar primera opción
+                                Platform.runLater(() -> {
+                                    if (!optionsBox.getChildren().isEmpty()) {
+                                        ((Button) optionsBox.getChildren().get(0)).fire();
+                                    }
+                                });
+                            }
+                        }
+                    };
+                    modalOverlay.getProperties().put("sceneKeyHandler", sceneHandler);
+                    scene.addEventFilter(KeyEvent.KEY_PRESSED, sceneHandler);
+                }
+            });
+
+            modalOverlay.getProperties().put("onRemoved", (Runnable) () -> {
+                startMover();
+                root.getProperties().put("dialogOpen", false);
+                root.requestFocus();
+            });
+        });
+    }
+
+
+    private void showInnDialog() {
+        // Crear mensaje de bienvenida
+        String welcomeMessage = "¡Welcome to Inn!\n"
+                + "Do you want to rest and restore your health? It cost 150 coins\n\n"
+                + "**Current life: " + game.getHero().getActualLife() + "/" + game.getHero().getLife() + "**\n"
+                + "**Money: " + game.getHero().getMoney() + "**";
+
+        showBottomDialogRPGWithOptions(
+                "Host",
+                welcomeMessage,
+                "/Resources/sprites/NPC/host.png", // Usar imagen del posadero
+                new String[]{"Rest (150 coins)", "Back"}
+        );
     }
 
     private void fadeOutAndRemove(StackPane modalOverlay) {

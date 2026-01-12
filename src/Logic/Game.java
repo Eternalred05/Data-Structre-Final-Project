@@ -653,6 +653,7 @@ public class Game {
         if (hero.getActualLife() != hero.getLife()) {
             if (hero.getMoney() >= price) {
                 healed = true;
+                hero.setActualLife(hero.getLife());
                 hero.setMoney(hero.getMoney() - price);
             }
         }
